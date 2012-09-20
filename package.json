@@ -13,6 +13,7 @@
     "node": ">=0.8.0"
   },
   "dependencies": {
+    "hoek": "0.0.x"
   },
   "devDependencies": {
   }
