@@ -26,12 +26,11 @@ describe('oz', function () {
                 scope: ['b']                // Ticket-specific scope
             };
 
-            var ts = Date.now();
             Oz.Ticket.issue(app, user, options, function (err, ticket) {
 
                 should.not.exist(err);
 
-                Oz.Ticket.parse(ticket.ticket, function (err, object) {
+                Oz.Ticket.parse(ticket.id, function (err, object) {
 
                     should.not.exist(err);
                     object.ext.should.equal('welcome');
