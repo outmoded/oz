@@ -1,3 +1,0 @@
-<testsuite name="Mocha Tests" tests="1" failures="0" errors="0" skip="0" timestamp="Fri, 21 Sep 2012 02:06:12 GMT" time="0.003">
-<testcase classname="oz #issue" name="should construct a valid ticket" time="0.001"/>
-</testsuite>
