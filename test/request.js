@@ -29,7 +29,7 @@ describe('oz', function () {
             };
 
             var mac = Oz.Request.mac(request, attributes, ticket);
-            var header = Oz.Http.formatHeader(attributes, ticket.id, mac);
+            var header = Oz.Request.formatHeader(attributes, ticket.id, mac);
 
             var req = {
                 method: request.method,
@@ -40,7 +40,7 @@ describe('oz', function () {
                 }
             };
             
-            Oz.Http.authenticate(req, {}, function (err, ticket, attributes) {
+            Oz.Request.authenticate(req, {}, function (err, ticket, attributes) {
 
                 should.not.exist(err);
                 attributes.ext.should.equal('welcome');
