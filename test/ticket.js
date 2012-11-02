@@ -11,9 +11,9 @@ describe('oz', function () {
         it('should construct a valid ticket', function (done) {
 
             var app = {
-                id: '123',                  // Client id
+                id: '123',                  // App id
                 ttl: 5 * 60 * 1000,         // 5 min
-                scope: ['a', 'b']           // Client scope
+                scope: ['a', 'b']           // App scope
             };
 
             var user = {

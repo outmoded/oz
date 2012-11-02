@@ -27,18 +27,14 @@ describe('oz', function () {
             };
 
             var attributes = {
-                ts: Date.now(),
                 ext: 'welcome'
             };
-
-            var mac = Oz.Request.mac(request, attributes, ticket);
-            var header = Oz.Request.formatHeader(attributes, ticket.id, ticket.app, mac);
 
             var req = {
                 method: request.method,
                 url: request.resource,
                 headers: {
-                    authorization: header,
+                    authorization: Oz.Request.generateHeader(request, ticket, attributes),
                     host: request.host + ':' + request.port
                 }
             };
