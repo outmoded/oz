@@ -1,7 +1,7 @@
 {
   "name": "oz",
   "description": "Web Authorization Protocol",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Eran Hammer <eran@hueniverse.com>",
   "repository": "git://github.com/hueniverse/oz",
   "main": "index",
