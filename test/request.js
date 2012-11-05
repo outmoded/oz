@@ -27,7 +27,7 @@ describe('oz', function () {
             };
 
             var attributes = {
-                ext: 'welcome'
+                ext: '"welcome"'
             };
 
             var req = {
@@ -42,7 +42,7 @@ describe('oz', function () {
             Oz.Request.authenticate(req, {}, function (err, ticket, attributes) {
 
                 should.not.exist(err);
-                attributes.ext.should.equal('welcome');
+                attributes.ext.should.equal('"welcome"');
                 done();
             });
         });
