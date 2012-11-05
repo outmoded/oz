@@ -4,11 +4,13 @@ var sinon = require('sinon');
 var Oz = require('../lib/oz');
 
 
-describe('oz', function () {
+describe('Ticket', function () {
 
     describe('#issue', function () {
 
         it('should construct a valid ticket', function (done) {
+
+            var encryptionPassword = 'welcome!';
 
             var app = {
                 id: '123',                  // App id
@@ -26,11 +28,11 @@ describe('oz', function () {
                 scope: ['b']                // Ticket-specific scope
             };
 
-            Oz.Ticket.issue(app, user, options, function (err, ticket) {
+            Oz.Ticket.issue(app, user, encryptionPassword, options, function (err, ticket) {
 
                 should.not.exist(err);
 
-                Oz.Ticket.parse(ticket.id, function (err, object) {
+                Oz.Ticket.parse(ticket.id, encryptionPassword, function (err, object) {
 
                     should.not.exist(err);
                     object.ext.should.equal('welcome');
