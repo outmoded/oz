@@ -16,11 +16,11 @@ describe('RSVP', function () {
                 id: '123'                   // App id
             };
 
-            var user = {
-                grant: 's81u29n1812'        // Grant
+            var grant = {
+                id: 's81u29n1812'           // Grant
             };
 
-            Oz.rsvp.issue(app, user, encryptionPassword, function (err, envelope) {
+            Oz.rsvp.issue(app, grant, encryptionPassword, function (err, envelope) {
 
                 should.not.exist(err);
 
@@ -28,7 +28,7 @@ describe('RSVP', function () {
 
                     should.not.exist(err);
                     object.app.should.equal(app.id);
-                    object.grant.should.equal(user.grant);
+                    object.grant.should.equal(grant.id);
                     done();
                 });
             });
