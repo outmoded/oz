@@ -17,7 +17,6 @@ describe('RSVP', function () {
             };
 
             var user = {
-                id: '456',                  // User id
                 grant: 's81u29n1812'        // Grant
             };
 
@@ -29,7 +28,6 @@ describe('RSVP', function () {
 
                     should.not.exist(err);
                     object.app.should.equal(app.id);
-                    object.user.should.equal(user.id);
                     object.grant.should.equal(user.grant);
                     done();
                 });

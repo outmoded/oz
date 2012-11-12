@@ -13,29 +13,30 @@ describe('Ticket', function () {
             var encryptionPassword = 'welcome!';
 
             var app = {
-                id: '123',                  // App id
-                ttl: 5 * 60 * 1000,         // 5 min
-                scope: ['a', 'b']           // App scope
+                id: '123'
             };
 
-            var user = {
-                id: '456',                  // User id
-                grant: 's81u29n1812'        // Grant
+            var grant = {
+                id: 's81u29n1812',
+                user: '456',
+                exp: Date.now() + 5000,
+                scope: ['a', 'b']
             };
 
             var options = {
-                ttl: 60 * 1000,             // 1 min
-                scope: ['b'],               // Ticket-specific scope
-                ext: {                      // Server-specific extension data
+                ttl: 10 * 60 * 1000,
+                scope: ['b'],
+                ext: {
                     x: 'welcome',
                     'private': 123
                 }
             };
 
-            Oz.Ticket.issue(app, user, encryptionPassword, options, function (err, envelope) {
+            Oz.Ticket.issue(app, grant, encryptionPassword, options, function (err, envelope) {
 
                 should.not.exist(err);
                 envelope.ext.x.should.equal('welcome');
+                envelope.exp.should.equal(grant.exp);
                 should.not.exist(envelope.ext.private);
 
                 Oz.Ticket.parse(envelope.id, encryptionPassword, function (err, ticket) {
