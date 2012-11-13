@@ -1,7 +1,8 @@
+var expect = require('chai').expect;
 var assert = require('assert');
 var should = require('should');
 var sinon = require('sinon');
-var Oz = require('../lib/oz');
+var Oz = process.env.TEST_COV ? require('../lib-cov/oz') : require('../lib/oz');
 
 
 describe('Request', function () {
@@ -36,12 +37,12 @@ describe('Request', function () {
                 method: request.method,
                 url: request.resource,
                 headers: {
-                    authorization: Oz.Request.generateHeader(request, ticket, attributes),
+                    authorization: Oz.request.generateHeader(request, ticket, attributes),
                     host: request.host + ':' + request.port
                 }
             };
             
-            Oz.Request.authenticate(req, encryptionPassword, {}, function (err, ticket, attributes) {
+            Oz.request.authenticate(req, encryptionPassword, {}, function (err, ticket, attributes) {
 
                 should.not.exist(err);
                 attributes.ext.should.equal('"welcome"');

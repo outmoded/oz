@@ -11,26 +11,68 @@ var Oz = {
     internals: {}
 };
 
+Oz.request = Oz.Request = {};
 
-// Generate an Authorization header for a given request
 
-Oz.getAuthorizationHeader = function (method, uri, ticket, ext) {
+/*
+    var request = {
+        method: 'GET',
 
-    ext = (ext && typeof ext === 'object' ? JSON.stringify(ext) : ext);
-    uri = Oz.internals.parseUri(uri);
-    var ts = Date.now();
+        uri: 'http://example.com/path?query',
+
+        // OR
+
+        resource: '/path?query',
+        host: 'example.com',
+        port: 80
+    };
+
+    var attributes = {
+        ts: 1348170630020               // Date.now()
+        ext: 'app data'                 // Server-specific extension data (string)
+    };
+*/
+
+Oz.request.mac = function (request, ticket, attributes) {
+
+    if (request.uri) {
+        var uri = Oz.internals.parseUri(request.uri);
+        request.host = uri.host;
+        request.port = uri.port;
+        request.resource = uri.resource;
+    }
 
     var normalized = ticket.id + '\n' +
                      ticket.app + '\n' +
-                     ts + '\n' +
-                     method.toUpperCase() + '\n' +
-                     uri.resource + '\n' +
-                     uri.host.toLowerCase() + '\n' +
-                     uri.port + '\n' +
-                     (ext || '');
+                     (attributes.dlg || '') + '\n' +
+                     attributes.ts + '\n' +
+                     request.method.toUpperCase() + '\n' +
+                     request.resource + '\n' +
+                     request.host.toLowerCase() + '\n' +
+                     request.port + '\n' +
+                     (attributes.ext || '');
 
     var mac = Oz.macMessage(normalized, ticket).replace(/\+/g, '-').replace(/\//g, '_').replace(/\=/g, '');
-    return 'Oz id="' + ticket.id + '", app="' + Oz.internals.escapeHeaderAttribute(ticket.app) + '", ts="' + ts + (ext ? '", ext="' + Oz.internals.escapeHeaderAttribute(ext) : '') + '", mac="' + mac + '"';
+    return mac;
+};
+
+
+Oz.request.formatHeader = function (attributes, id, app, mac) {
+
+    return 'Oz id="' + id + '", app="' + Oz.internals.escapeHeaderAttribute(app) + '", ts="' + attributes.ts + (attributes.ext ? '", ext="' + Oz.internals.escapeHeaderAttribute(attributes.ext) : '') + (attributes.dlg ? '", dlg="' + Oz.internals.escapeHeaderAttribute(attributes.dlg) : '') + '", mac="' + mac + '"';
+};
+
+
+Oz.request.generateHeader = function (request, ticket, attributes) {
+
+    attributes = attributes || { ts: Date.now() };
+    if (ticket.delegatedBy && !attributes.dlg) {
+        attributes.dlg = ticket.delegatedBy;
+    }
+
+    var mac = Oz.request.mac(request, ticket, attributes);
+    var header = Oz.request.formatHeader(attributes, ticket.id, ticket.app, mac);
+    return header;
 };
 
 

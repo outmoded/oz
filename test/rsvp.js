@@ -1,7 +1,8 @@
+var expect = require('chai').expect;
 var assert = require('assert');
 var should = require('should');
 var sinon = require('sinon');
-var Oz = require('../lib/oz');
+var Oz = process.env.TEST_COV ? require('../lib-cov/oz') : require('../lib/oz');
 
 
 describe('RSVP', function () {

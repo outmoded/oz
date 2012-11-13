@@ -1,7 +1,8 @@
+var expect = require('chai').expect;
 var assert = require('assert');
 var should = require('should');
 var sinon = require('sinon');
-var Oz = require('../lib/oz');
+var Oz = process.env.TEST_COV ? require('../lib-cov/oz') : require('../lib/oz');
 
 
 describe('Ticket', function () {
@@ -32,19 +33,25 @@ describe('Ticket', function () {
                 }
             };
 
-            Oz.Ticket.issue(app, grant, encryptionPassword, options, function (err, envelope) {
+            Oz.ticket.issue(app, grant, encryptionPassword, options, function (err, envelope) {
 
                 should.not.exist(err);
                 envelope.ext.x.should.equal('welcome');
                 envelope.exp.should.equal(grant.exp);
                 should.not.exist(envelope.ext.private);
 
-                Oz.Ticket.parse(envelope.id, encryptionPassword, function (err, ticket) {
+                Oz.ticket.parse(envelope.id, encryptionPassword, function (err, ticket) {
 
                     should.not.exist(err);
                     ticket.ext.x.should.equal('welcome');
                     ticket.ext.private.should.equal(123);
-                    done();
+
+                    Oz.ticket.reissue(ticket, encryptionPassword, {}, function (err, envelope2) {
+
+                        envelope2.ext.x.should.equal('welcome');
+                        envelope2.id.should.not.equal(envelope.id);
+                        done();
+                    });
                 });
             });
         });
