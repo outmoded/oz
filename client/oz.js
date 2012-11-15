@@ -100,7 +100,7 @@ Oz.macMessage = function (message, ticket) {
     // Sign normalized request string
 
     return Crypto.util.bytesToBase64(Crypto.HMAC(hashFunc, Oz.internals.utf8Encode(message), ticket.key, { asBytes: true }));
-}
+};
 
 
 // Escape header attribute value
