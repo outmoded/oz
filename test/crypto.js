@@ -1,7 +1,10 @@
+// Load modules
+
 var expect = require('chai').expect;
 var Crypto = process.env.TEST_COV ? require('../lib-cov/crypto') : require('../lib/crypto');
 
-describe('Crypto', function() {
+
+describe('Crypto', function () {
 
     describe('#generateKey', function() {
 
