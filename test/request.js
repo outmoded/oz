@@ -42,7 +42,7 @@ describe('Request', function () {
                 }
             };
             
-            Oz.request.authenticate(req, encryptionPassword, {}, function (err, ticket, attributes) {
+            Oz.request.authenticate(req, encryptionPassword, {}, function (err, ticket, ext) {
 
                 should.exist(err);
                 done();
@@ -82,7 +82,7 @@ describe('Request', function () {
                 }
             };
 
-            Oz.request.authenticate(req, encryptionPassword, {}, function (err, ticket, attributes) {
+            Oz.request.authenticate(req, encryptionPassword, {}, function (err, ticket, ext) {
 
                 should.exist(err);
                 done();
