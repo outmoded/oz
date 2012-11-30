@@ -9,7 +9,7 @@ describe('Request', function () {
 
     describe('#authenticate', function () {
 
-        it('should parse a valid authentication header', function (done) {
+        it('should return an error on an expired ticket', function (done) {
 
             // Note: the ticket.id already encodes all the other ticket attributes and they cannot be manually changed
             
@@ -44,8 +44,7 @@ describe('Request', function () {
             
             Oz.request.authenticate(req, encryptionPassword, {}, function (err, ticket, attributes) {
 
-                should.not.exist(err);
-                attributes.ext.should.equal('"welcome"');
+                should.exist(err);
                 done();
             });
         });
