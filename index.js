@@ -1,1 +1,1 @@
-module.exports = require('./lib/oz');
+module.exports = require('./lib');

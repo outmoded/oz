@@ -1,8 +1,17 @@
 // Load modules
 
-var expect = require('chai').expect;
-var should = require('should');
-var Oz = process.env.TEST_COV ? require('../lib-cov/oz') : require('../lib/oz');
+var Chai = require('chai');
+var Oz = process.env.TEST_COV ? require('../lib-cov') : require('../lib');
+
+
+// Declare internals
+
+var internals = {};
+
+
+// Test shortcuts
+
+var expect = Chai.expect;
 
 
 describe('Ticket', function () {
@@ -35,21 +44,21 @@ describe('Ticket', function () {
 
             Oz.ticket.issue(app, grant, encryptionPassword, options, function (err, envelope) {
 
-                should.not.exist(err);
-                envelope.ext.x.should.equal('welcome');
-                envelope.exp.should.equal(grant.exp);
-                should.not.exist(envelope.ext.private);
+                expect(err).to.not.exist;
+                expect(envelope.ext.x).to.equal('welcome');
+                expect(envelope.exp).to.equal(grant.exp);
+                expect(envelope.ext.private).to.not.exist;
 
                 Oz.ticket.parse(envelope.id, encryptionPassword, function (err, ticket) {
 
-                    should.not.exist(err);
-                    ticket.ext.x.should.equal('welcome');
-                    ticket.ext.private.should.equal(123);
+                    expect(err).to.not.exist;
+                    expect(ticket.ext.x).to.equal('welcome');
+                    expect(ticket.ext.private).to.equal(123);
 
                     Oz.ticket.reissue(ticket, encryptionPassword, {}, function (err, envelope2) {
 
-                        envelope2.ext.x.should.equal('welcome');
-                        envelope2.id.should.not.equal(envelope.id);
+                        expect(envelope2.ext.x).to.equal('welcome');
+                        expect(envelope2.id).to.not.equal(envelope.id);
                         done();
                     });
                 });

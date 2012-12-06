@@ -1,8 +1,17 @@
 // Load modules
 
-var expect = require('chai').expect;
-var should = require('should');
-var Oz = process.env.TEST_COV ? require('../lib-cov/oz') : require('../lib/oz');
+var Chai = require('chai');
+var Oz = process.env.TEST_COV ? require('../lib-cov') : require('../lib');
+
+
+// Declare internals
+
+var internals = {};
+
+
+// Test shortcuts
+
+var expect = Chai.expect;
 
 
 describe('RSVP', function () {
@@ -23,13 +32,13 @@ describe('RSVP', function () {
 
             Oz.rsvp.issue(app, grant, encryptionPassword, function (err, envelope) {
 
-                should.not.exist(err);
+                expect(err).to.not.exist
 
                 Oz.rsvp.parse(envelope, encryptionPassword, function (err, object) {
 
-                    should.not.exist(err);
-                    object.app.should.equal(app.id);
-                    object.grant.should.equal(grant.id);
+                    expect(err).to.not.exist;
+                    expect(object.app).to.equal(app.id);
+                    expect(object.grant).to.equal(grant.id);
                     done();
                 });
             });

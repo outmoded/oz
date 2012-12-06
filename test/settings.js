@@ -1,8 +1,17 @@
 // Load modules
 
-var expect = require('chai').expect;
-var should = require('should');
-var Oz = process.env.TEST_COV ? require('../lib-cov/oz') : require('../lib/oz');
+var Chai = require('chai');
+var Oz = process.env.TEST_COV ? require('../lib-cov') : require('../lib');
+
+
+// Declare internals
+
+var internals = {};
+
+
+// Test shortcuts
+
+var expect = Chai.expect;
 
 
 describe('Settings', function () {
@@ -14,8 +23,8 @@ describe('Settings', function () {
             var ttl = Oz.settings.ticket.ttl;
             var secretBits = Oz.settings.ticket.secretBits;
             Oz.settings.set('ticket', { ttl: ttl + 100 });
-            Oz.settings.ticket.ttl.should.equal(ttl + 100);
-            Oz.settings.ticket.secretBits.should.equal(secretBits);
+            expect(Oz.settings.ticket.ttl).to.equal(ttl + 100);
+            expect(Oz.settings.ticket.secretBits).to.equal(secretBits);
             done();
         });
 
@@ -24,8 +33,8 @@ describe('Settings', function () {
             var ttl = Oz.settings.ticket.ttl;
             var secretBits = Oz.settings.ticket.secretBits;
             Oz.settings.set({ ticket: { ttl: ttl + 100 } });
-            Oz.settings.ticket.ttl.should.equal(ttl + 100);
-            Oz.settings.ticket.secretBits.should.equal(secretBits);
+            expect(Oz.settings.ticket.ttl).to.equal(ttl + 100);
+            expect(Oz.settings.ticket.secretBits).to.equal(secretBits);
             done();
         });
     });

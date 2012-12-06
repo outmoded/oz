@@ -1,8 +1,17 @@
 // Load modules
 
-var expect = require('chai').expect;
-var should = require('should');
-var Oz = process.env.TEST_COV ? require('../lib-cov/oz') : require('../lib/oz');
+var Chai = require('chai');
+var Oz = process.env.TEST_COV ? require('../lib-cov') : require('../lib');
+
+
+// Declare internals
+
+var internals = {};
+
+
+// Test shortcuts
+
+var expect = Chai.expect;
 
 
 describe('Scope', function () {

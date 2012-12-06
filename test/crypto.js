@@ -1,7 +1,17 @@
 // Load modules
 
-var expect = require('chai').expect;
-var Crypto = process.env.TEST_COV ? require('../lib-cov/crypto') : require('../lib/crypto');
+var Chai = require('chai');
+var Oz = process.env.TEST_COV ? require('../lib-cov') : require('../lib');
+
+
+// Declare internals
+
+var internals = {};
+
+
+// Test shortcuts
+
+var expect = Chai.expect;
 
 
 describe('Crypto', function () {
@@ -10,7 +20,7 @@ describe('Crypto', function () {
 
         it('returns an error when password is missing', function(done) {
 
-            Crypto.generateKey(null, null, function(err) {
+            Oz.crypto.generateKey(null, null, function(err) {
 
                 expect(err).to.be.instanceOf(Error);
                 done();
@@ -19,7 +29,7 @@ describe('Crypto', function () {
 
         it('returns an error when options are missing', function(done) {
 
-            Crypto.generateKey('password', null, function(err) {
+            Oz.crypto.generateKey('password', null, function(err) {
 
                 expect(err).to.be.instanceOf(Error);
                 done();
@@ -28,7 +38,7 @@ describe('Crypto', function () {
 
         it('returns an error when an unknown algorithm is specified', function(done) {
 
-            Crypto.generateKey('password', { algorithm: 'unknown' }, function(err) {
+            Oz.crypto.generateKey('password', { algorithm: 'unknown' }, function(err) {
 
                 expect(err).to.be.instanceOf(Error);
                 done();
@@ -42,7 +52,7 @@ describe('Crypto', function () {
                 iterations: 2
             };
 
-            Crypto.generateKey('password', options, function(err) {
+            Oz.crypto.generateKey('password', options, function(err) {
 
                 expect(err).to.be.instanceOf(Error);
                 done();
@@ -57,7 +67,7 @@ describe('Crypto', function () {
                 iterations: 2
             };
 
-            Crypto.generateKey('password', options, function(err, result) {
+            Oz.crypto.generateKey('password', options, function(err, result) {
 
                 expect(err).to.not.exist;
                 expect(result).to.exist;
