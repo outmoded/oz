@@ -21,20 +21,20 @@ describe('Settings', function () {
         it('should override default values using (group, settings)', function (done) {
 
             var ttl = Oz.settings.ticket.ttl;
-            var secretBits = Oz.settings.ticket.secretBits;
+            var secretBytes = Oz.settings.ticket.secretBytes;
             Oz.settings.set('ticket', { ttl: ttl + 100 });
             expect(Oz.settings.ticket.ttl).to.equal(ttl + 100);
-            expect(Oz.settings.ticket.secretBits).to.equal(secretBits);
+            expect(Oz.settings.ticket.secretBytes).to.equal(secretBytes);
             done();
         });
 
         it('should override default values using (tree)', function (done) {
 
             var ttl = Oz.settings.ticket.ttl;
-            var secretBits = Oz.settings.ticket.secretBits;
+            var secretBytes = Oz.settings.ticket.secretBytes;
             Oz.settings.set({ ticket: { ttl: ttl + 100 } });
             expect(Oz.settings.ticket.ttl).to.equal(ttl + 100);
-            expect(Oz.settings.ticket.secretBits).to.equal(secretBits);
+            expect(Oz.settings.ticket.secretBytes).to.equal(secretBytes);
             done();
         });
     });
