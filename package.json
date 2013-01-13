@@ -1,7 +1,7 @@
 {
   "name": "oz",
   "description": "Web Authorization Protocol",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "author": "Eran Hammer <eran@hueniverse.com> (http://hueniverse.com)",
   "contributors":[
     "Wyatt Preul <wpreul@gmail.com>",
@@ -20,7 +20,8 @@
   "dependencies": {
     "joi": "0.0.x",
     "hoek": "0.0.x",
-    "boom": "0.0.x"
+    "boom": "0.0.x",
+    "iron": "0.0.x"
   },
   "devDependencies": {
     "mocha": "1.x.x",
