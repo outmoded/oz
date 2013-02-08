@@ -1,7 +1,7 @@
 {
   "name": "oz",
   "description": "Web Authorization Protocol",
-  "version": "0.0.19",
+  "version": "0.1.0",
   "author": "Eran Hammer <eran@hueniverse.com> (http://hueniverse.com)",
   "contributors":[
     "Wyatt Preul <wpreul@gmail.com>",
@@ -20,7 +20,7 @@
   "dependencies": {
     "joi": "0.0.x",
     "hoek": "0.4.x",
-    "boom": "0.2.x",
+    "boom": "0.3.x",
     "iron": "0.1.x",
     "cryptiles": "0.0.x"
   },
