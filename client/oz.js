@@ -7,9 +7,7 @@
 
 // Declare namespaces
 
-var Oz = {
-    internals: {}
-};
+var Oz = {};
 
 Oz.request = Oz.Request = {};
 
@@ -36,14 +34,13 @@ Oz.request = Oz.Request = {};
 Oz.request.mac = function (request, ticket, attributes) {
 
     if (request.uri) {
-        var uri = Oz.internals.parseUri(request.uri);
+        var uri = Oz._parseUri(request.uri);
         request.host = uri.host;
         request.port = uri.port;
         request.resource = uri.resource;
     }
 
-    var normalized = ticket.id + '\n' +
-                     ticket.app + '\n' +
+    var normalized = ticket.app + '\n' +
                      (attributes.dlg || '') + '\n' +
                      attributes.ts + '\n' +
                      request.method.toUpperCase() + '\n' +
@@ -59,7 +56,7 @@ Oz.request.mac = function (request, ticket, attributes) {
 
 Oz.request.formatHeader = function (attributes, id, app, mac) {
 
-    return 'Oz id="' + id + '", app="' + Oz.internals.escapeHeaderAttribute(app) + '", ts="' + attributes.ts + (attributes.ext ? '", ext="' + Oz.internals.escapeHeaderAttribute(attributes.ext) : '') + (attributes.dlg ? '", dlg="' + Oz.internals.escapeHeaderAttribute(attributes.dlg) : '') + '", mac="' + mac + '"';
+    return 'Oz id="' + id + '", app="' + Oz._escapeHeaderAttribute(app) + '", ts="' + attributes.ts + (attributes.ext ? '", ext="' + Oz._escapeHeaderAttribute(attributes.ext) : '') + (attributes.dlg ? '", dlg="' + Oz._escapeHeaderAttribute(attributes.dlg) : '') + '", mac="' + mac + '"';
 };
 
 
@@ -99,13 +96,13 @@ Oz.macMessage = function (message, ticket) {
 
     // Sign normalized request string
 
-    return Crypto.util.bytesToBase64(Crypto.HMAC(hashFunc, Oz.internals.utf8Encode(message), ticket.key, { asBytes: true }));
+    return Crypto.util.bytesToBase64(Crypto.HMAC(hashFunc, Oz._utf8Encode(message), ticket.key, { asBytes: true }));
 };
 
 
 // Escape header attribute value
 
-Oz.internals.escapeHeaderAttribute = function (attribute) {
+Oz._escapeHeaderAttribute = function (attribute) {
 
     return attribute.replace(/\\/g, '\\\\').replace(/\"/g, '\\"');
 };
@@ -116,7 +113,7 @@ Oz.internals.escapeHeaderAttribute = function (attribute) {
 // (c) Steven Levithan <stevenlevithan.com>
 // MIT License
 
-Oz.internals.parseUri = function (input) {
+Oz._parseUri = function (input) {
 
     var keys = ['source', 'scheme', 'authority', 'userInfo', 'user', 'password', 'host', 'port', 'resource', 'relative', 'pathname', 'directory', 'file', 'query', 'fragment'];
 
@@ -151,7 +148,7 @@ Oz.internals.parseUri = function (input) {
 
 // Adapted from http://www.webtoolkit.info/javascript-url-decode-encode.html
 
-Oz.internals.utf8Encode = function (string) {
+Oz._utf8Encode = function (string) {
 
     string = string.replace(/\r\n/g, '\n');
     var utfString = '';
