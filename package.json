@@ -22,7 +22,8 @@
     "hoek": "0.4.x",
     "boom": "0.3.x",
     "iron": "0.2.x",
-    "cryptiles": "0.1.x"
+    "cryptiles": "0.1.x",
+    "hawk": "0.7.x"
   },
   "devDependencies": {
     "mocha": "1.x.x",
