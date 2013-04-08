@@ -1,6 +1,6 @@
 // Load modules
 
-var Chai = require('chai');
+var Lab = require('lab');
 var Oz = require('../lib');
 
 
@@ -11,14 +11,28 @@ var internals = {};
 
 // Test shortcuts
 
-var expect = Chai.expect;
+var expect = Lab.expect;
+var before = Lab.before;
+var after = Lab.after;
+var describe = Lab.experiment;
+var it = Lab.test;
 
 
-describe('Request', function () {
+describe('Server', function () {
 
     describe('#authenticate', function () {
 
-        it('should return an error on an expired ticket', function (done) {
+        it('returns an error on missing password', function (done) {
+
+            Oz.server.authenticate(null, null, {}, function (err, ticket, ext) {
+
+                expect(err).to.exist;
+                expect(err.message).to.equal('Invalid encryption password');
+                done();
+            });
+        });
+
+        it('returns an error on an expired ticket', function (done) {
 
             // Note: the ticket.id already encodes all the other ticket attributes and they cannot be manually changed
             
@@ -30,35 +44,25 @@ describe('Request', function () {
                 algorithm: 'sha256',
                 app: '123'
             };
-              
-            var request = {
-                method: 'GET',
-                resource: '/path?query',
-                host: 'example.com',
-                port: 80
-            };
-
-            var attributes = {
-                ext: '"welcome"'
-            };
 
             var req = {
-                method: request.method,
-                url: request.resource,
+                method: 'GET',
+                url: '/path?query',
                 headers: {
-                    authorization: Oz.request.generateHeader(request, ticket, attributes),
-                    host: request.host + ':' + request.port
+                    authorization: Oz.client.header('http://example.com/path?query', 'GET', ticket, { ext: 'welcome' }).field,
+                    host: 'example.com:80'
                 }
             };
             
-            Oz.request.authenticate(req, encryptionPassword, {}, function (err, ticket, ext) {
+            Oz.server.authenticate(req, encryptionPassword, {}, function (err, ticket, ext) {
 
                 expect(err).to.exist;
+                expect(err.message).to.equal('');
                 done();
             });
         });
 
-        it('should return an error for an invalid authentication header', function (done) {
+        it('returns an error for an invalid authentication header', function (done) {
 
             // Note: the ticket.id already encodes all the other ticket attributes and they cannot be manually changed
 
@@ -78,20 +82,16 @@ describe('Request', function () {
                 port: 80
             };
 
-            var attributes = {
-                ext: '"welcome"'
-            };
-
             var req = {
                 method: request.method,
                 url: request.resource,
                 headers: {
-                    authorization: Oz.request.generateHeader(request, ticket, attributes),
+                    authorization: Oz.client.header('http://example.com/path?query', 'GET', ticket).field,
                     host: request.host + ':' + request.port
                 }
             };
 
-            Oz.request.authenticate(req, encryptionPassword, {}, function (err, ticket, ext) {
+            Oz.server.authenticate(req, encryptionPassword, {}, function (err, ticket, ext) {
 
                 expect(err).to.exist;
                 done();
@@ -99,5 +99,4 @@ describe('Request', function () {
         });
     });
 });
-
 

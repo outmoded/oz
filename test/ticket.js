@@ -1,6 +1,7 @@
 // Load modules
 
-var Chai = require('chai');
+var Hawk = require('hawk');
+var Lab = require('lab');
 var Oz = require('../lib');
 
 
@@ -11,7 +12,11 @@ var internals = {};
 
 // Test shortcuts
 
-var expect = Chai.expect;
+var expect = Lab.expect;
+var before = Lab.before;
+var after = Lab.after;
+var describe = Lab.experiment;
+var it = Lab.test;
 
 
 describe('Ticket', function () {
@@ -29,7 +34,7 @@ describe('Ticket', function () {
             var grant = {
                 id: 's81u29n1812',
                 user: '456',
-                exp: Date.now() + 5000,
+                exp: Hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
