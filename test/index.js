@@ -21,11 +21,6 @@ var it = Lab.test;
 
 describe('Oz', function () {
 
-    var basicHeader = function (username, password) {
-
-        return 'Basic ' + (new Buffer(username + ':' + password, 'utf8')).toString('base64');
-    };
-
     it('runs a full authorization flow', function (done) {
 
         var encryptionPassword = 'password';
@@ -34,25 +29,25 @@ describe('Oz', function () {
             social: {
                 id: 'social',
                 scope: ['a', 'b', 'c'],
-                secret: 'secret1'
+                key: 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
+                algorithm: 'sha256'
             },
             network: {
                 id: 'network',
                 scope: ['b', 'x'],
-                secret: 'secret2'
-            },
-            third: {
-                id: 'third',
-                scope: ['b', 'x'],
-                secret: 'secret3'
+                key: 'witf745itwn7ey4otnw7eyi4t7syeir7bytise7rbyi',
+                algorithm: 'sha256'
             }
         };
 
         // The app requests an app ticket using Basic authentication
 
         var req = {
+            method: 'POST',
+            url: '/oz/app',
             headers: {
-                authorization: basicHeader(apps['social'].id, apps['social'].secret)
+                host: 'example.com',
+                authorization: Hawk.client.header('http://example.com/oz/app', 'POST', { credentials: apps['social'] }).field
             }
         };
 
@@ -60,7 +55,7 @@ describe('Oz', function () {
             encryptionPassword: encryptionPassword,
             loadAppFunc: function (id, callback) {
 
-                callback(apps[id]);
+                callback(null, apps[id]);
             }
         };
 
@@ -90,7 +85,7 @@ describe('Oz', function () {
                         private: 'the the dice are loaded'
                     };
 
-                    callback(grant, ext);
+                    callback(null, grant, ext);
                 };
 
                 // The app exchanges the rsvp for a ticket
