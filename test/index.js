@@ -73,7 +73,7 @@ describe('Oz', function () {
                 exp: Hawk.utils.now() + 60000
             };
 
-            Oz.rsvp.issue(apps['social'], grant, encryptionPassword, function (err, rsvp) {
+            Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
 
                 expect(err).to.not.exist;
 

@@ -1,6 +1,7 @@
 // Load modules
 
 var Hawk = require('hawk');
+var Iron = require('iron');
 var Lab = require('lab');
 var Oz = require('../lib');
 
@@ -67,6 +68,59 @@ describe('Ticket', function () {
                         done();
                     });
                 });
+            });
+        });
+    });
+
+    describe('#rsvp', function () {
+
+        it('constructs a valid rsvp', function (done) {
+
+            var encryptionPassword = 'welcome!';
+
+            var app = {
+                id: '123'                   // App id
+            };
+
+            var grant = {
+                id: 's81u29n1812'           // Grant
+            };
+
+            Oz.ticket.rsvp(app, grant, encryptionPassword, {}, function (err, envelope) {
+
+                expect(err).to.not.exist;
+
+                Oz.ticket.parse(envelope, encryptionPassword, function (err, object) {
+
+                    expect(err).to.not.exist;
+                    expect(object.app).to.equal(app.id);
+                    expect(object.grant).to.equal(grant.id);
+                    done();
+                });
+            });
+        });
+
+        it('fails to construct a valid rsvp due to bad Iron options', function (done) {
+
+            var encryptionPassword = 'welcome!';
+
+            var app = {
+                id: '123'                   // App id
+            };
+
+            var grant = {
+                id: 's81u29n1812'           // Grant
+            };
+
+            Oz.ticket.settings.encryption = null;
+
+            Oz.ticket.rsvp(app, grant, encryptionPassword, {}, function (err, envelope) {
+
+                Oz.ticket.settings.encryption = Iron.defaults.encryption;
+
+                expect(err).to.exist;
+                expect(err.message).to.equal('Bad options');
+                done();
             });
         });
     });
