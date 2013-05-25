@@ -30,8 +30,6 @@ describe('Oz', function () {
 
         var encryptionPassword = 'password';
 
-        // Request an app ticket
-
         var apps = {
             social: {
                 id: 'social',
@@ -42,8 +40,15 @@ describe('Oz', function () {
                 id: 'network',
                 scope: ['b', 'x'],
                 secret: 'secret2'
+            },
+            third: {
+                id: 'third',
+                scope: ['b', 'x'],
+                secret: 'secret3'
             }
         };
+
+        // The app requests an app ticket using Basic authentication
 
         var req = {
             headers: {
@@ -52,19 +57,18 @@ describe('Oz', function () {
         };
 
         var options = {
-            encryptionPassword: encryptionPassword
-        };
+            encryptionPassword: encryptionPassword,
+            loadAppFunc: function (id, callback) {
 
-        options.loadAppFunc = function (id, callback) {
-
-            callback(apps[id]);
+                callback(apps[id]);
+            }
         };
 
         Oz.endpoints.app(req, null, options, function (err, appTicket) {
 
             expect(err).to.not.exist;
 
-            // The user logs into the server and grant app access, resulting in an rsvp
+            // The user is redirected to the server, logs in, and grant app access, resulting in an rsvp
 
             var grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
@@ -89,6 +93,8 @@ describe('Oz', function () {
                     callback(grant, ext);
                 };
 
+                // The app exchanges the rsvp for a ticket
+
                 var payload = { rsvp: rsvp };
 
                 req = {
@@ -104,18 +110,41 @@ describe('Oz', function () {
 
                     expect(err).to.not.exist;
 
-                    // Refresh the ticket
-
-                    var otherApp = {
-                    };
+                    // The app reissues the ticket with delegation to another app
 
                     payload = {
-                        issueTo: otherApp.id
+                        issueTo: apps.network.id
                     };
 
-                    Oz.endpoints.reissue(req, payload, options, function (err, ticket) {
+                    req = {
+                        method: 'POST',
+                        url: '/oz/reissue',
+                        headers: {
+                            host: 'example.com',
+                            authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).field
+                        }
+                    };
 
-                        done();
+                    Oz.endpoints.reissue(req, payload, options, function (err, delegatedTicket) {
+
+                        expect(err).to.not.exist;
+
+                        // The other app reissues their ticket
+
+                        req = {
+                            method: 'POST',
+                            url: '/oz/reissue',
+                            headers: {
+                                host: 'example.com',
+                                authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', delegatedTicket).field
+                            }
+                        };
+
+                        Oz.endpoints.reissue(req, {}, options, function (err, reissuedDelegatedTicket) {
+
+                            expect(err).to.not.exist;
+                            done();
+                        });
                     });
                 });
             });
