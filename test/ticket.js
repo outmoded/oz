@@ -2,6 +2,7 @@
 
 var Hawk = require('hawk');
 var Iron = require('iron');
+var Cryptiles = require('cryptiles');
 var Lab = require('lab');
 var Oz = require('../lib');
 
@@ -67,6 +68,73 @@ describe('Ticket', function () {
                         expect(envelope2.id).to.not.equal(envelope.id);
                         done();
                     });
+                });
+            });
+        });
+    });
+
+    describe('#rsvp', function () {
+
+        it('errors on random fail', function (done) {
+
+            var orig = Cryptiles.randomString;
+            Cryptiles.randomString = function (size) {
+
+                Cryptiles.randomString = orig;
+                return new Error('fake');
+            };
+
+            Oz.ticket.generate({}, 'password', function (err, ticket) {
+
+                expect(err).to.exist;
+                expect(err.message).to.equal('fake');
+                done();
+            });
+        });
+
+        it('errors on missing password', function (done) {
+
+            Oz.ticket.generate({}, null, function (err, ticket) {
+
+                expect(err).to.exist;
+                expect(err.message).to.equal('Empty password');
+                done();
+            });
+        });
+
+        it('errors on wrong password', function (done) {
+
+            var encryptionPassword = 'welcome!';
+
+            var app = {
+                id: '123'
+            };
+
+            var grant = {
+                id: 's81u29n1812',
+                user: '456',
+                exp: Hawk.utils.now() + 5000,
+                scope: ['a', 'b']
+            };
+
+            var options = {
+                ttl: 10 * 60 * 1000,
+                scope: ['b'],
+                ext: {
+                    x: 'welcome',
+                    'private': 123
+                }
+            };
+
+            Oz.ticket.issue(app, grant, 'password', options, function (err, envelope) {
+
+                expect(err).to.not.exist;
+
+                Oz.ticket.parse(envelope.id, 'x', function (err, ticket) {
+
+                    expect(err).to.exist;
+                    expect(err.message).to.equal('Bad hmac value');
+                    done();
                 });
             });
         });
