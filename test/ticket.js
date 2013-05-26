@@ -1,6 +1,7 @@
 // Load modules
 
 var Hawk = require('hawk');
+var Hoek = require('hoek');
 var Iron = require('iron');
 var Cryptiles = require('cryptiles');
 var Lab = require('lab');
@@ -56,7 +57,7 @@ describe('Ticket', function () {
                 expect(envelope.exp).to.equal(grant.exp);
                 expect(envelope.ext.private).to.not.exist;
 
-                Oz.ticket.parse(envelope.id, encryptionPassword, function (err, ticket) {
+                Oz.ticket.parse(envelope.id, encryptionPassword, {}, function (err, ticket) {
 
                     expect(err).to.not.exist;
                     expect(ticket.ext.x).to.equal('welcome');
@@ -84,7 +85,7 @@ describe('Ticket', function () {
                 return new Error('fake');
             };
 
-            Oz.ticket.generate({}, 'password', function (err, ticket) {
+            Oz.ticket.generate({}, 'password', {}, function (err, ticket) {
 
                 expect(err).to.exist;
                 expect(err.message).to.equal('fake');
@@ -94,7 +95,7 @@ describe('Ticket', function () {
 
         it('errors on missing password', function (done) {
 
-            Oz.ticket.generate({}, null, function (err, ticket) {
+            Oz.ticket.generate({}, null, {}, function (err, ticket) {
 
                 expect(err).to.exist;
                 expect(err.message).to.equal('Empty password');
@@ -130,7 +131,7 @@ describe('Ticket', function () {
 
                 expect(err).to.not.exist;
 
-                Oz.ticket.parse(envelope.id, 'x', function (err, ticket) {
+                Oz.ticket.parse(envelope.id, 'x', {}, function (err, ticket) {
 
                     expect(err).to.exist;
                     expect(err.message).to.equal('Bad hmac value');
@@ -158,7 +159,7 @@ describe('Ticket', function () {
 
                 expect(err).to.not.exist;
 
-                Oz.ticket.parse(envelope, encryptionPassword, function (err, object) {
+                Oz.ticket.parse(envelope, encryptionPassword, {}, function (err, object) {
 
                     expect(err).to.not.exist;
                     expect(object.app).to.equal(app.id);
@@ -180,11 +181,10 @@ describe('Ticket', function () {
                 id: 's81u29n1812'           // Grant
             };
 
-            Oz.ticket.settings.encryption = null;
+            var iron = Hoek.clone(Iron.defaults);
+            iron.encryption = null;
 
-            Oz.ticket.rsvp(app, grant, encryptionPassword, {}, function (err, envelope) {
-
-                Oz.ticket.settings.encryption = Iron.defaults.encryption;
+            Oz.ticket.rsvp(app, grant, encryptionPassword, { iron: iron }, function (err, envelope) {
 
                 expect(err).to.exist;
                 expect(err.message).to.equal('Bad options');
