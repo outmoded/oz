@@ -25,7 +25,7 @@ describe('Server', function () {
 
         it('returns an error on missing password', function (done) {
 
-            Oz.server.authenticate(null, null, {}, function (err, ticket, ext) {
+            Oz.server.authenticate(null, null, {}, function (err, credentials, artifacts) {
 
                 expect(err).to.exist;
                 expect(err.message).to.equal('Invalid encryption password');
@@ -61,7 +61,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, encryptionPassword, {}, function (err, ticket, ext) {
+                Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
 
                     expect(err).to.not.exist;
                     done();
@@ -91,7 +91,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, 'x', {}, function (err, ticket, ext) {
+                Oz.server.authenticate(req, 'x', {}, function (err, credentials, artifacts) {
 
                     expect(err).to.exist;
                     expect(err.message).to.equal('Bad hmac value');
@@ -122,7 +122,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, encryptionPassword, {}, function (err, ticket, ext) {
+                Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
 
                     expect(err).to.exist;
                     expect(err.message).to.equal('Expired ticket');
@@ -154,7 +154,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, encryptionPassword, {}, function (err, ticket, ext) {
+                Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
 
                     expect(err).to.exist;
                     expect(err.message).to.equal('Mismatching application id');
@@ -186,7 +186,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, encryptionPassword, {}, function (err, ticket, ext) {
+                Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
 
                     expect(err).to.exist;
                     expect(err.message).to.equal('Mismatching delegated application id');
