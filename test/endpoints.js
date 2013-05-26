@@ -1,6 +1,5 @@
 // Load modules
 
-var Hawk = require('hawk');
 var Lab = require('lab');
 var Oz = require('../lib');
 
@@ -47,7 +46,7 @@ describe('Endpoints', function () {
             url: '/oz/app',
             headers: {
                 host: 'example.com',
-                authorization: Hawk.client.header('http://example.com/oz/app', 'POST', { credentials: apps['social'] }).field
+                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps['social']).field
             }
         };
 
@@ -73,7 +72,7 @@ describe('Endpoints', function () {
             url: '/oz/app',
             headers: {
                 host: 'example.com',
-                authorization: Hawk.client.header('http://example.com/oz/app', 'POST', { credentials: apps['social'] }).field
+                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps['social']).field
             }
         };
 
@@ -198,7 +197,7 @@ describe('Endpoints', function () {
             id: 'a1b2c3d4e5f6g7h8i9j0',
             app: appTicket.app,
             user: 'john',
-            exp: Hawk.utils.now() + 60000
+            exp: Oz.hawk.utils.now() + 60000
         };
 
         Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
@@ -263,7 +262,7 @@ describe('Endpoints', function () {
             id: 'a1b2c3d4e5f6g7h8i9j0',
             app: appTicket.app,
             user: 'john',
-            exp: Hawk.utils.now() + 60000
+            exp: Oz.hawk.utils.now() + 60000
         };
 
         Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
@@ -309,7 +308,7 @@ describe('Endpoints', function () {
             id: 'a1b2c3d4e5f6g7h8i9j0',
             app: appTicket.app,
             user: 'john',
-            exp: Hawk.utils.now() + 60000
+            exp: Oz.hawk.utils.now() + 60000
         };
 
         Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
@@ -355,7 +354,7 @@ describe('Endpoints', function () {
             id: 'a1b2c3d4e5f6g7h8i9j0',
             app: appTicket.app,
             user: 'john',
-            exp: Hawk.utils.now() + 60000
+            exp: Oz.hawk.utils.now() + 60000
         };
 
         Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
@@ -417,7 +416,7 @@ describe('Endpoints', function () {
             id: 'a1b2c3d4e5f6g7h8i9j0',
             app: appTicket.app,
             user: 'john',
-            exp: Hawk.utils.now() + 60000
+            exp: Oz.hawk.utils.now() + 60000
         };
 
         Oz.ticket.rsvp(apps['network'], grant, encryptionPassword, {}, function (err, rsvp) {
@@ -463,7 +462,7 @@ describe('Endpoints', function () {
             id: 'a1b2c3d4e5f6g7h8i9j0',
             app: appTicket.app,
             user: 'john',
-            exp: Hawk.utils.now() + 60000
+            exp: Oz.hawk.utils.now() + 60000
         };
 
         Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, { ttl: 1 }, function (err, rsvp) {
@@ -509,7 +508,7 @@ describe('Endpoints', function () {
             id: 'a1b2c3d4e5f6g7h8i9j0',
             app: appTicket.app,
             user: 'john',
-            exp: Hawk.utils.now() - 1000
+            exp: Oz.hawk.utils.now() - 1000
         };
 
         Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
@@ -555,7 +554,7 @@ describe('Endpoints', function () {
             id: 'a1b2c3d4e5f6g7h8i9j0',
             app: appTicket.app,
             user: 'john',
-            exp: Hawk.utils.now() + 60000
+            exp: Oz.hawk.utils.now() + 60000
         };
 
         Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {

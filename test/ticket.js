@@ -1,6 +1,5 @@
 // Load modules
 
-var Hawk = require('hawk');
 var Hoek = require('hoek');
 var Iron = require('iron');
 var Cryptiles = require('cryptiles');
@@ -37,7 +36,7 @@ describe('Ticket', function () {
             var grant = {
                 id: 's81u29n1812',
                 user: '456',
-                exp: Hawk.utils.now() + 5000,
+                exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
@@ -114,7 +113,7 @@ describe('Ticket', function () {
             var grant = {
                 id: 's81u29n1812',
                 user: '456',
-                exp: Hawk.utils.now() + 5000,
+                exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 

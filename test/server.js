@@ -1,7 +1,6 @@
 // Load modules
 
 var Lab = require('lab');
-var Hawk = require('hawk');
 var Oz = require('../lib');
 
 
@@ -44,7 +43,7 @@ describe('Server', function () {
             var grant = {
                 id: 's81u29n1812',
                 user: '456',
-                exp: Hawk.utils.now() + 5000,
+                exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
@@ -74,7 +73,7 @@ describe('Server', function () {
             var grant = {
                 id: 's81u29n1812',
                 user: '456',
-                exp: Hawk.utils.now() + 5000,
+                exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
@@ -105,7 +104,7 @@ describe('Server', function () {
             var grant = {
                 id: 's81u29n1812',
                 user: '456',
-                exp: Hawk.utils.now() - 5000,
+                exp: Oz.hawk.utils.now() - 5000,
                 scope: ['a', 'b']
             };
 
@@ -136,7 +135,7 @@ describe('Server', function () {
             var grant = {
                 id: 's81u29n1812',
                 user: '456',
-                exp: Hawk.utils.now() + 5000,
+                exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
@@ -168,7 +167,7 @@ describe('Server', function () {
             var grant = {
                 id: 's81u29n1812',
                 user: '456',
-                exp: Hawk.utils.now() + 5000,
+                exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 

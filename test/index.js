@@ -1,6 +1,5 @@
 // Load modules
 
-var Hawk = require('hawk');
 var Lab = require('lab');
 var Oz = require('../lib');
 
@@ -40,14 +39,14 @@ describe('Oz', function () {
             }
         };
 
-        // The app requests an app ticket using Hawk authentication
+        // The app requests an app ticket using Oz.hawk authentication
 
         var req = {
             method: 'POST',
             url: '/oz/app',
             headers: {
                 host: 'example.com',
-                authorization: Hawk.client.header('http://example.com/oz/app', 'POST', { credentials: apps['social'] }).field
+                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps['social']).field
             }
         };
 
@@ -84,7 +83,7 @@ describe('Oz', function () {
                     id: 'a1b2c3d4e5f6g7h8i9j0',
                     app: reAppTicket.app,
                     user: 'john',
-                    exp: Hawk.utils.now() + 60000
+                    exp: Oz.hawk.utils.now() + 60000
                 };
 
                 Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
