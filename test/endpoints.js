@@ -288,7 +288,7 @@ describe('Endpoints', function () {
             Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
                 expect(err).to.exist;
-                expect(err.message).to.equal('the value of rsvp is not allowed to be ');
+                expect(err.message).to.equal('the value of rsvp is not allowed to be empty');
                 done();
             });
         });
