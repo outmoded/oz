@@ -22,14 +22,13 @@ describe('Server', function () {
 
     describe('#authenticate', function () {
 
-        it('returns an error on missing password', function (done) {
+        it('throws an error on missing password', function (done) {
 
-            Oz.server.authenticate(null, null, {}, function (err, credentials, artifacts) {
+            expect(function () {
 
-                expect(err).to.exist;
-                expect(err.message).to.equal('Invalid encryption password');
-                done();
-            });
+                Oz.server.authenticate(null, null, {}, function () { });
+            }).to.throw('Invalid encryption password');
+            done();
         });
 
         var encryptionPassword = 'welcome!';
