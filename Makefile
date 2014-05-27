@@ -1,7 +1,7 @@
 test:
 	@./node_modules/.bin/lab
 test-cov: 
-	@./node_modules/.bin/lab -r threshold -t 100
+	@./node_modules/.bin/lab -t 100
 test-cov-html:
 	@./node_modules/.bin/lab -r html -o coverage.html
 

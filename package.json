@@ -2,7 +2,7 @@
   "name": "oz",
   "description": "Web Authorization Protocol",
   "version": "0.4.1",
-  "author": "Eran Hammer <eran@hueniverse.com> (http://hueniverse.com)",
+  "author": "Eran Hammer <eran@hammer.io> (http://hueniverse.com)",
   "contributors":[
     "Wyatt Preul <wpreul@gmail.com>",
     "Adam Barth <github@adambarth.com>"
@@ -18,15 +18,15 @@
     "node": ">=0.10.22"
   },
   "dependencies": {
-    "joi": "2.x.x",
-    "hoek": "1.x.x",
+    "joi": "4.x.x",
+    "hoek": "2.x.x",
     "boom": "2.x.x",
     "iron": "2.x.x",
     "cryptiles": "2.x.x",
     "hawk": "2.x.x"
   },
   "devDependencies": {
-    "lab": "1.x.x"
+    "lab": "3.x.x"
   },
   "scripts": {
     "test": "make test-cov"

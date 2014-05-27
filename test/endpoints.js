@@ -118,7 +118,7 @@ describe('Endpoints', function () {
         Oz.endpoints.reissue(req, payload, options, function (err, delegatedTicket) {
 
             expect(err).to.exist;
-            expect(err.message).to.equal('the value of issueTo is not allowed to be null');
+            expect(err.message).to.equal('issueTo must be a string');
             done();
         });
     });
@@ -288,7 +288,7 @@ describe('Endpoints', function () {
             Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
                 expect(err).to.exist;
-                expect(err.message).to.equal('the value of rsvp is not allowed to be empty');
+                expect(err.message).to.equal('rsvp is not allowed to be empty');
                 done();
             });
         });

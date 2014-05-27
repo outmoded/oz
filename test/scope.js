@@ -22,11 +22,11 @@ describe('Scope', function () {
 
     describe('#validate', function () {
 
-        it('should return true for valid scope', function (done) {
+        it('should return null for valid scope', function (done) {
 
             var scope = ['a', 'b', 'c'];
             var err = Oz.scope.validate(scope);
-            expect(err).to.equal(true);
+            expect(err).to.equal(null);
             done();
         });
 
