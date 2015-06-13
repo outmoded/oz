@@ -1,5 +1,6 @@
 // Load modules
 
+var Code = require('code');
 var Lab = require('lab');
 var Oz = require('../lib');
 
@@ -11,11 +12,10 @@ var internals = {};
 
 // Test shortcuts
 
-var expect = Lab.expect;
-var before = Lab.before;
-var after = Lab.after;
-var describe = Lab.experiment;
-var it = Lab.test;
+var lab = exports.lab = Lab.script();
+var describe = lab.experiment;
+var it = lab.test;
+var expect = Code.expect;
 
 
 describe('Oz', function () {
@@ -46,7 +46,7 @@ describe('Oz', function () {
             url: '/oz/app',
             headers: {
                 host: 'example.com',
-                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps['social']).field
+                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
             }
         };
 
@@ -60,7 +60,7 @@ describe('Oz', function () {
 
         Oz.endpoints.app(req, null, options, function (err, appTicket) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             // The app refreshes its own ticket
 
@@ -75,7 +75,7 @@ describe('Oz', function () {
 
             Oz.endpoints.reissue(req, {}, options, function (err, reAppTicket) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 // The user is redirected to the server, logs in, and grant app access, resulting in an rsvp
 
@@ -86,9 +86,9 @@ describe('Oz', function () {
                     exp: Oz.hawk.utils.now() + 60000
                 };
 
-                Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
+                Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
 
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
 
                     // After granting app access, the user returns to the app with the rsvp
 
@@ -117,7 +117,7 @@ describe('Oz', function () {
 
                     Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
-                        expect(err).to.not.exist;
+                        expect(err).to.not.exist();
 
                         // The app reissues the ticket with delegation to another app
 
@@ -137,7 +137,7 @@ describe('Oz', function () {
 
                         Oz.endpoints.reissue(req, payload, options, function (err, delegatedTicket) {
 
-                            expect(err).to.not.exist;
+                            expect(err).to.not.exist();
 
                             // The other app reissues their ticket
 
@@ -152,7 +152,7 @@ describe('Oz', function () {
 
                             Oz.endpoints.reissue(req, {}, options, function (err, reissuedDelegatedTicket) {
 
-                                expect(err).to.not.exist;
+                                expect(err).to.not.exist();
                                 done();
                             });
                         });

@@ -1,5 +1,6 @@
 // Load modules
 
+var Code = require('code');
 var Lab = require('lab');
 var Oz = require('../lib');
 
@@ -11,11 +12,11 @@ var internals = {};
 
 // Test shortcuts
 
-var expect = Lab.expect;
-var before = Lab.before;
-var after = Lab.after;
-var describe = Lab.experiment;
-var it = Lab.test;
+var lab = exports.lab = Lab.script();
+var describe = lab.experiment;
+var it = lab.test;
+var before = lab.before;
+var expect = Code.expect;
 
 
 describe('Endpoints', function () {
@@ -46,7 +47,7 @@ describe('Endpoints', function () {
             url: '/oz/app',
             headers: {
                 host: 'example.com',
-                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps['social']).field
+                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
             }
         };
 
@@ -72,7 +73,7 @@ describe('Endpoints', function () {
             url: '/oz/app',
             headers: {
                 host: 'example.com',
-                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps['social']).field
+                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
             }
         };
 
@@ -86,7 +87,7 @@ describe('Endpoints', function () {
 
         Oz.endpoints.app(req, null, options, function (err, appTicket) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Bad mac');
             done();
         });
@@ -117,8 +118,8 @@ describe('Endpoints', function () {
 
         Oz.endpoints.reissue(req, payload, options, function (err, delegatedTicket) {
 
-            expect(err).to.exist;
-            expect(err.message).to.equal('issueTo must be a string');
+            expect(err).to.exist();
+            expect(err.message).to.equal('child "issueTo" fails because ["issueTo" must be a string]');
             done();
         });
     });
@@ -145,7 +146,7 @@ describe('Endpoints', function () {
         options.encryptionPassword = 'x';
         Oz.endpoints.reissue(req, {}, options, function (err, delegatedTicket) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Bad hmac value');
             done();
         });
@@ -177,7 +178,7 @@ describe('Endpoints', function () {
 
         Oz.endpoints.reissue(req, {}, options, function (err, delegatedTicket) {
 
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.equal('Invalid application');
             done();
         });
@@ -200,9 +201,9 @@ describe('Endpoints', function () {
             exp: Oz.hawk.utils.now() + 60000
         };
 
-        Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
+        Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             options.loadGrantFunc = function (id, callback) {
 
@@ -222,7 +223,7 @@ describe('Endpoints', function () {
 
             Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 var req = {
                     method: 'POST',
@@ -240,7 +241,7 @@ describe('Endpoints', function () {
 
                 Oz.endpoints.reissue(req, {}, options, function (err, delegatedTicket) {
 
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     expect(err.message).to.equal('Invalid grant');
                     done();
                 });
@@ -265,9 +266,9 @@ describe('Endpoints', function () {
             exp: Oz.hawk.utils.now() + 60000
         };
 
-        Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
+        Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             options.loadGrantFunc = function (id, callback) {
 
@@ -287,8 +288,8 @@ describe('Endpoints', function () {
 
             Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
-                expect(err).to.exist;
-                expect(err.message).to.equal('rsvp is not allowed to be empty');
+                expect(err).to.exist();
+                expect(err.message).to.equal('child "rsvp" fails because ["rsvp" is not allowed to be empty]');
                 done();
             });
         });
@@ -311,9 +312,9 @@ describe('Endpoints', function () {
             exp: Oz.hawk.utils.now() + 60000
         };
 
-        Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
+        Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             options.loadGrantFunc = function (id, callback) {
 
@@ -333,7 +334,7 @@ describe('Endpoints', function () {
 
             Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err.message).to.equal('Incorrect number of sealed components');
                 done();
             });
@@ -357,9 +358,9 @@ describe('Endpoints', function () {
             exp: Oz.hawk.utils.now() + 60000
         };
 
-        Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
+        Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             options.loadGrantFunc = function (id, callback) {
 
@@ -379,7 +380,7 @@ describe('Endpoints', function () {
 
             Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 var payload = { rsvp: rsvp };
 
@@ -394,7 +395,7 @@ describe('Endpoints', function () {
 
                 Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     expect(err.message).to.equal('User ticket cannot be used on an application endpoint');
                     done();
                 });
@@ -419,9 +420,9 @@ describe('Endpoints', function () {
             exp: Oz.hawk.utils.now() + 60000
         };
 
-        Oz.ticket.rsvp(apps['network'], grant, encryptionPassword, {}, function (err, rsvp) {
+        Oz.ticket.rsvp(apps.network, grant, encryptionPassword, {}, function (err, rsvp) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             options.loadGrantFunc = function (id, callback) {
 
@@ -441,7 +442,7 @@ describe('Endpoints', function () {
 
             Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err.message).to.equal('Mismatching ticket and rsvp apps');
                 done();
             });
@@ -465,9 +466,9 @@ describe('Endpoints', function () {
             exp: Oz.hawk.utils.now() + 60000
         };
 
-        Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, { ttl: 1 }, function (err, rsvp) {
+        Oz.ticket.rsvp(apps.social, grant, encryptionPassword, { ttl: 1 }, function (err, rsvp) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             options.loadGrantFunc = function (id, callback) {
 
@@ -487,7 +488,7 @@ describe('Endpoints', function () {
 
             Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err.message).to.equal('Expired rsvp');
                 done();
             });
@@ -511,9 +512,9 @@ describe('Endpoints', function () {
             exp: Oz.hawk.utils.now() - 1000
         };
 
-        Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
+        Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             options.loadGrantFunc = function (id, callback) {
 
@@ -533,7 +534,7 @@ describe('Endpoints', function () {
 
             Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err.message).to.equal('Invalid grant');
                 done();
             });
@@ -557,9 +558,9 @@ describe('Endpoints', function () {
             exp: Oz.hawk.utils.now() + 60000
         };
 
-        Oz.ticket.rsvp(apps['social'], grant, encryptionPassword, {}, function (err, rsvp) {
+        Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
 
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             options.loadGrantFunc = function (id, callback) {
 
@@ -584,7 +585,7 @@ describe('Endpoints', function () {
 
             Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
 
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err.message).to.equal('Invalid application');
                 done();
             });

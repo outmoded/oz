@@ -1,5 +1,6 @@
 // Load modules
 
+var Code = require('code');
 var Lab = require('lab');
 var Oz = require('../lib');
 
@@ -11,11 +12,10 @@ var internals = {};
 
 // Test shortcuts
 
-var expect = Lab.expect;
-var before = Lab.before;
-var after = Lab.after;
-var describe = Lab.experiment;
-var it = Lab.test;
+var lab = exports.lab = Lab.script();
+var describe = lab.experiment;
+var it = lab.test;
+var expect = Code.expect;
 
 
 describe('Scope', function () {
@@ -33,14 +33,14 @@ describe('Scope', function () {
         it('should return error when scope is null', function (done) {
 
             var err = Oz.scope.validate(null);
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
 
         it('should return error when scope is not an array', function (done) {
 
             var err = Oz.scope.validate({});
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
 
@@ -48,7 +48,7 @@ describe('Scope', function () {
 
             var scope = ['a', 'b', 1];
             var err = Oz.scope.validate(scope);
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
 
@@ -56,7 +56,7 @@ describe('Scope', function () {
 
             var scope = ['a', 'b', 'b'];
             var err = Oz.scope.validate(scope);
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
 
@@ -64,7 +64,7 @@ describe('Scope', function () {
 
             var scope = ['a', 'b', ''];
             var err = Oz.scope.validate(scope);
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
     });

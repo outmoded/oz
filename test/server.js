@@ -1,5 +1,6 @@
 // Load modules
 
+var Code = require('code');
 var Lab = require('lab');
 var Oz = require('../lib');
 
@@ -11,11 +12,10 @@ var internals = {};
 
 // Test shortcuts
 
-var expect = Lab.expect;
-var before = Lab.before;
-var after = Lab.after;
-var describe = Lab.experiment;
-var it = Lab.test;
+var lab = exports.lab = Lab.script();
+var describe = lab.experiment;
+var it = lab.test;
+var expect = Code.expect;
 
 
 describe('Server', function () {
@@ -48,7 +48,7 @@ describe('Server', function () {
 
             Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 var req = {
                     method: 'POST',
@@ -61,7 +61,7 @@ describe('Server', function () {
 
                 Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
 
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     done();
                 });
             });
@@ -78,7 +78,7 @@ describe('Server', function () {
 
             Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 var req = {
                     method: 'POST',
@@ -91,7 +91,7 @@ describe('Server', function () {
 
                 Oz.server.authenticate(req, 'x', {}, function (err, credentials, artifacts) {
 
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     expect(err.message).to.equal('Bad hmac value');
                     done();
                 });
@@ -109,7 +109,7 @@ describe('Server', function () {
 
             Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 var req = {
                     method: 'POST',
@@ -122,7 +122,7 @@ describe('Server', function () {
 
                 Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
 
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     expect(err.message).to.equal('Expired ticket');
                     done();
                 });
@@ -140,7 +140,7 @@ describe('Server', function () {
 
             Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 envelope.app = '567';
                 var req = {
@@ -154,7 +154,7 @@ describe('Server', function () {
 
                 Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
 
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     expect(err.message).to.equal('Mismatching application id');
                     done();
                 });
@@ -172,7 +172,7 @@ describe('Server', function () {
 
             Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 envelope.dlg = '567';
                 var req = {
@@ -186,7 +186,7 @@ describe('Server', function () {
 
                 Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
 
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     expect(err.message).to.equal('Mismatching delegated application id');
                     done();
                 });

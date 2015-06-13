@@ -1,8 +1,9 @@
 // Load modules
 
+var Code = require('code');
+var Cryptiles = require('cryptiles');
 var Hoek = require('hoek');
 var Iron = require('iron');
-var Cryptiles = require('cryptiles');
 var Lab = require('lab');
 var Oz = require('../lib');
 
@@ -14,11 +15,10 @@ var internals = {};
 
 // Test shortcuts
 
-var expect = Lab.expect;
-var before = Lab.before;
-var after = Lab.after;
-var describe = Lab.experiment;
-var it = Lab.test;
+var lab = exports.lab = Lab.script();
+var describe = lab.experiment;
+var it = lab.test;
+var expect = Code.expect;
 
 
 describe('Ticket', function () {
@@ -51,14 +51,14 @@ describe('Ticket', function () {
 
             Oz.ticket.issue(app, grant, encryptionPassword, options, function (err, envelope) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(envelope.ext.x).to.equal('welcome');
                 expect(envelope.exp).to.equal(grant.exp);
-                expect(envelope.ext.private).to.not.exist;
+                expect(envelope.ext.private).to.not.exist();
 
                 Oz.ticket.parse(envelope.id, encryptionPassword, {}, function (err, ticket) {
 
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(ticket.ext.x).to.equal('welcome');
                     expect(ticket.ext.private).to.equal(123);
 
@@ -86,7 +86,7 @@ describe('Ticket', function () {
 
             Oz.ticket.generate({}, 'password', {}, function (err, ticket) {
 
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err.message).to.equal('fake');
                 done();
             });
@@ -96,7 +96,7 @@ describe('Ticket', function () {
 
             Oz.ticket.generate({}, null, {}, function (err, ticket) {
 
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err.message).to.equal('Empty password');
                 done();
             });
@@ -128,11 +128,11 @@ describe('Ticket', function () {
 
             Oz.ticket.issue(app, grant, 'password', options, function (err, envelope) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 Oz.ticket.parse(envelope.id, 'x', {}, function (err, ticket) {
 
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     expect(err.message).to.equal('Bad hmac value');
                     done();
                 });
@@ -156,11 +156,11 @@ describe('Ticket', function () {
 
             Oz.ticket.rsvp(app, grant, encryptionPassword, {}, function (err, envelope) {
 
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 Oz.ticket.parse(envelope, encryptionPassword, {}, function (err, object) {
 
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(object.app).to.equal(app.id);
                     expect(object.grant).to.equal(grant.id);
                     done();
@@ -185,7 +185,7 @@ describe('Ticket', function () {
 
             Oz.ticket.rsvp(app, grant, encryptionPassword, { iron: iron }, function (err, envelope) {
 
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err.message).to.equal('Bad options');
                 done();
             });

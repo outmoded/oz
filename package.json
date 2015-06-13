@@ -1,40 +1,37 @@
 {
   "name": "oz",
   "description": "Web Authorization Protocol",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "author": "Eran Hammer <eran@hammer.io> (http://hueniverse.com)",
   "contributors":[
     "Wyatt Preul <wpreul@gmail.com>",
     "Adam Barth <github@adambarth.com>"
   ],
   "repository": "git://github.com/hueniverse/oz",
-  "main": "index",
+  "main": "lib/index.js",
   "keywords": [
     "http",
     "authorization",
     "oz"
   ],
   "engines": {
-    "node": ">=0.10.22"
+    "node": ">=0.10.32"
   },
   "dependencies": {
-    "joi": "4.x.x",
+    "joi": "6.x.x",
     "hoek": "2.x.x",
     "boom": "2.x.x",
     "iron": "2.x.x",
     "cryptiles": "2.x.x",
-    "hawk": "2.x.x"
+    "hawk": "3.x.x"
   },
   "devDependencies": {
-    "lab": "3.x.x"
+    "code": "1.0.0",
+    "lab": "5.x.x"
   },
   "scripts": {
-    "test": "make test-cov"
+    "test": "lab -a code -t 100 -L",
+    "test-cov-html": "lab -a code -r html -o coverage.html"
   },
-  "licenses": [
-    {
-      "type": "BSD",
-      "url": "http://github.com/hueniverse/oz/raw/master/LICENSE"
-    }
-  ]
+  "license": "BSD-3-Clause"
 }
