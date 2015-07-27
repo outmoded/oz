@@ -85,7 +85,7 @@ describe('Endpoints', function () {
             }
         };
 
-        Oz.endpoints.app(req, null, options, function (err, appTicket) {
+        Oz.endpoints.app(req, null, options, function (err, ticket) {
 
             expect(err).to.exist();
             expect(err.message).to.equal('Bad mac');
@@ -212,7 +212,7 @@ describe('Endpoints', function () {
 
             var payload = { rsvp: rsvp };
 
-            var req = {
+            var req1 = {
                 method: 'POST',
                 url: '/oz/rsvp',
                 headers: {
@@ -221,11 +221,11 @@ describe('Endpoints', function () {
                 }
             };
 
-            Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+            Oz.endpoints.rsvp(req1, payload, options, function (err, ticket) {
 
                 expect(err).to.not.exist();
 
-                var req = {
+                var req2 = {
                     method: 'POST',
                     url: '/oz/reissue',
                     headers: {
@@ -239,7 +239,7 @@ describe('Endpoints', function () {
                     callback(null, null);
                 };
 
-                Oz.endpoints.reissue(req, {}, options, function (err, delegatedTicket) {
+                Oz.endpoints.reissue(req2, {}, options, function (err, delegatedTicket) {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid grant');
@@ -367,9 +367,9 @@ describe('Endpoints', function () {
                 callback(null, grant);
             };
 
-            var payload = { rsvp: rsvp };
+            var body = { rsvp: rsvp };
 
-            var req = {
+            var req1 = {
                 method: 'POST',
                 url: '/oz/rsvp',
                 headers: {
@@ -378,22 +378,20 @@ describe('Endpoints', function () {
                 }
             };
 
-            Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+            Oz.endpoints.rsvp(req1, body, options, function (err, ticket1) {
 
                 expect(err).to.not.exist();
 
-                var payload = { rsvp: rsvp };
-
-                var req = {
+                var req2 = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
                         host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', ticket).field
+                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', ticket1).field
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req2, body, options, function (err, ticket2) {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('User ticket cannot be used on an application endpoint');

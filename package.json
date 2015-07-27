@@ -26,7 +26,7 @@
     "hawk": "^3.1.x"
   },
   "devDependencies": {
-    "code": "1.0.0",
+    "code": "1.x.x",
     "lab": "5.x.x"
   },
   "scripts": {

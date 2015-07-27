@@ -20,7 +20,7 @@ var expect = Code.expect;
 
 describe('Server', function () {
 
-    describe('#authenticate', function () {
+    describe('authenticate()', function () {
 
         it('throws an error on missing password', function (done) {
 
@@ -195,4 +195,3 @@ describe('Server', function () {
         });
     });
 });
-
