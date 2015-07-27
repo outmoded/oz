@@ -5,14 +5,15 @@ providing interoperability and security out-of-the-box.
 
 [![Build Status](https://secure.travis-ci.org/hueniverse/oz.png)](http://travis-ci.org/hueniverse/oz)
 
+## This is an experimental module and is not ready for production usage.
+
 # API
 
 ## `endpoints`
 
-### `app`
-Generates an application ticket.  The `Oz.endpoints.app` function has the signature `(req, payload, options, callback)`.  Here is an explanation of
-each parameter:
+### `app(req, payload, options, callback)`
 
+Generates an application ticket where:
 - `req` - the node.js http server request object.  The following properties are expected to exist on `req`:
     - `method` - HTTP method used, for example: 'POST'.
     - ` url` - path to app endpoint
@@ -27,11 +28,9 @@ object is represented below in the [app-object-example].
 documentation for the full list of options.
 - `callback` - called with the following parameters: `err` and `ticket`
 
+### `reissue(req, payload, options, callback)`
 
-### `reissue`
-Reissue an existing ticket.  The `Oz.endpoints.reissue` function has the signature `(req, payload, options, callback)`.  Here is an explanation of
-each parameter:
-
+Reissue an existing ticket where:
 - `req` - the node.js http server request object.  The following properties are expected to exist on `req`:
     - `method` - HTTP method used, for example: 'POST'.
     - ` url` - path to app endpoint
@@ -47,7 +46,6 @@ object is represented below in the [app-object-example].
     - `hawk` - object that represents options to forward to Hawk `authenticate` function.  Refer to the [Hawk](https://github.com/hapijs/hawk)
 documentation for the full list of options.
 - `callback` - called with the following parameters: `err` and `ticket`
-
 
 ## `ticket`
 
