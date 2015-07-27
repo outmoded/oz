@@ -67,6 +67,36 @@ describe('Server', function () {
             });
         });
 
+        it('authenticates a request (hawk options)', function (done) {
+
+            var grant = {
+                id: 's81u29n1812',
+                user: '456',
+                exp: Oz.hawk.utils.now() + 5000,
+                scope: ['a', 'b']
+            };
+
+            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+
+                expect(err).to.not.exist();
+
+                var req = {
+                    method: 'POST',
+                    url: '/oz/rsvp',
+                    headers: {
+                        hostx1: 'example.com',
+                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', envelope).field
+                    }
+                };
+
+                Oz.server.authenticate(req, encryptionPassword, { hawk: { hostHeaderName: 'hostx1' } }, function (err, credentials, artifacts) {
+
+                    expect(err).to.not.exist();
+                    done();
+                });
+            });
+        });
+
         it('fails to authenticate a request with bad password', function (done) {
 
             var grant = {
