@@ -23,48 +23,53 @@ var expect = Code.expect;
 
 describe('Ticket', function () {
 
-    describe('#issue', function () {
+    describe('issue()', function () {
 
         it('should construct a valid ticket', function (done) {
 
             var encryptionPassword = 'welcome!';
 
             var app = {
-                id: '123'
+                id: '123',
+                scope: ['a' ,'b']
             };
 
             var grant = {
                 id: 's81u29n1812',
                 user: '456',
                 exp: Oz.hawk.utils.now() + 5000,
-                scope: ['a', 'b']
+                scope: ['a']
             };
 
             var options = {
                 ttl: 10 * 60 * 1000,
-                scope: ['b'],
                 ext: {
-                    x: 'welcome',
-                    'private': 123
-                }
+                    public: {
+                        x: 'welcome'
+                    },
+                    private: {
+                        x: 123
+                    }
+                },
+                grant: grant
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, options, function (err, envelope) {
+            Oz.ticket.issue(app, encryptionPassword, options, function (err, envelope) {
 
                 expect(err).to.not.exist();
-                expect(envelope.ext.x).to.equal('welcome');
+                expect(envelope.ext).to.deep.equal({ x: 'welcome' });
                 expect(envelope.exp).to.equal(grant.exp);
-                expect(envelope.ext.private).to.not.exist();
+                expect(envelope.scope).to.deep.equal(['a']);
 
                 Oz.ticket.parse(envelope.id, encryptionPassword, {}, function (err, ticket) {
 
                     expect(err).to.not.exist();
-                    expect(ticket.ext.x).to.equal('welcome');
-                    expect(ticket.ext.private).to.equal(123);
+                    expect(ticket.ext).to.deep.equal(options.ext);
 
-                    Oz.ticket.reissue(ticket, encryptionPassword, {}, function (err, envelope2) {
+                    Oz.ticket.reissue(ticket, encryptionPassword, { grant: grant }, function (err, envelope2) {
 
-                        expect(envelope2.ext.x).to.equal('welcome');
+                        expect(err).to.not.exist();
+                        expect(envelope.ext).to.deep.equal({ x: 'welcome' });
                         expect(envelope2.id).to.not.equal(envelope.id);
                         done();
                     });
@@ -73,7 +78,7 @@ describe('Ticket', function () {
         });
     });
 
-    describe('#rsvp', function () {
+    describe('rsvp()', function () {
 
         it('errors on random fail', function (done) {
 
@@ -119,14 +124,10 @@ describe('Ticket', function () {
 
             var options = {
                 ttl: 10 * 60 * 1000,
-                scope: ['b'],
-                ext: {
-                    x: 'welcome',
-                    'private': 123
-                }
+                grant: grant
             };
 
-            Oz.ticket.issue(app, grant, 'password', options, function (err, envelope) {
+            Oz.ticket.issue(app, 'password', options, function (err, envelope) {
 
                 expect(err).to.not.exist();
 
@@ -138,9 +139,6 @@ describe('Ticket', function () {
                 });
             });
         });
-    });
-
-    describe('#rsvp', function () {
 
         it('constructs a valid rsvp', function (done) {
 

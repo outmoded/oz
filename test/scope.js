@@ -20,7 +20,7 @@ var expect = Code.expect;
 
 describe('Scope', function () {
 
-    describe('#validate', function () {
+    describe('validate()', function () {
 
         it('should return null for valid scope', function (done) {
 
@@ -69,7 +69,7 @@ describe('Scope', function () {
         });
     });
 
-    describe('#isSubset', function () {
+    describe('isSubset()', function () {
 
         it('should return true when scope is a subset', function (done) {
 

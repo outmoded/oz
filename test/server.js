@@ -46,7 +46,7 @@ describe('Server', function () {
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, encryptionPassword, { grant: grant }, function (err, envelope) {
 
                 expect(err).to.not.exist();
 
@@ -76,7 +76,7 @@ describe('Server', function () {
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, encryptionPassword, { grant: grant }, function (err, envelope) {
 
                 expect(err).to.not.exist();
 
@@ -106,7 +106,7 @@ describe('Server', function () {
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, encryptionPassword, { grant: grant }, function (err, envelope) {
 
                 expect(err).to.not.exist();
 
@@ -137,7 +137,7 @@ describe('Server', function () {
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, encryptionPassword, { grant: grant }, function (err, envelope) {
 
                 expect(err).to.not.exist();
 
@@ -169,7 +169,7 @@ describe('Server', function () {
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, encryptionPassword, { grant: grant }, function (err, envelope) {
 
                 expect(err).to.not.exist();
 
@@ -201,7 +201,7 @@ describe('Server', function () {
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, encryptionPassword, { grant: grant }, function (err, envelope) {
 
                 expect(err).to.not.exist();
 

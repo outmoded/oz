@@ -1,21 +1,17 @@
 {
   "name": "oz",
   "description": "Web Authorization Protocol",
-  "version": "0.6.0",
-  "author": "Eran Hammer <eran@hammer.io> (http://hueniverse.com)",
-  "contributors":[
-    "Wyatt Preul <wpreul@gmail.com>",
-    "Adam Barth <github@adambarth.com>"
-  ],
+  "version": "1.0.0",
   "repository": "git://github.com/hueniverse/oz",
   "main": "lib/index.js",
   "keywords": [
     "http",
     "authorization",
-    "oz"
+    "oz",
+    "hawk"
   ],
   "engines": {
-    "node": ">=0.10.32"
+    "node": "4.x.x"
   },
   "dependencies": {
     "joi": "6.x.x",
