@@ -29,7 +29,8 @@ describe('Oz', function () {
                 id: 'social',
                 scope: ['a', 'b', 'c'],
                 key: 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
-                algorithm: 'sha256'
+                algorithm: 'sha256',
+                delegate: true
             },
             network: {
                 id: 'network',

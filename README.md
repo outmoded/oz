@@ -24,7 +24,7 @@ assumes the reader is familiar with the OAuth 1.0a protocol workflow.
   the server issues an application ticket.
 2. The application directs the [user](#user) to grant it authorization by providing the user with its
   application identifier. The user authenticates with the server, reviews the authorization
-  [grant](#grant)and its [scope](#scope), and if approved the server returns an [rsvp](#rsvp).
+  [grant](#grant) and its [scope](#scope), and if approved the server returns an [rsvp](#rsvp).
 3. The user returns to the application with the rsvp which the application uses to request a new
   user-specific ticket. If valid, the server returns a new ticket.
 4. The application uses the user-ticket to access the user's protected resources.
@@ -43,6 +43,8 @@ the control of a user who grants the application access.
 Each application definition includes:
 - `id` - a unique application identifier.
 - `scope` - the default application [scope](#scope).
+- `delegate` - if `true`, the application is allowed to delegate a ticket to another application.
+  Defaults to `false`.
 
 Applications must be registered with the server prior to using Oz. The method through which
 applications register is outside the scope of this protocol. When an application registers, it is
