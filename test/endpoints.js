@@ -130,6 +130,32 @@ describe('Endpoints', function () {
 
     describe('reissue()', function () {
 
+        it('allows null payload', function (done) {
+
+            var req = {
+                method: 'POST',
+                url: '/oz/reissue',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).field
+                }
+            };
+
+            var options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, apps.social);
+                }
+            };
+
+            Oz.endpoints.reissue(req, null, options, function (err, ticket) {
+
+                expect(err).to.not.exist();
+                done();
+            });
+        });
+
         it('overrides defaults', function (done) {
 
             var req = {
@@ -740,6 +766,16 @@ describe('Endpoints', function () {
                     expect(err).to.not.exist();
                     done();
                 });
+            });
+        });
+
+        it('errors on missing payload', function (done) {
+
+            Oz.endpoints.rsvp({}, null, {}, function (err, ticket) {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Missing required payload');
+                done();
             });
         });
 
