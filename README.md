@@ -131,93 +131,183 @@ encoded string containing the application identifier, the grant identifier, and 
 
 ## API
 
-## `endpoints`
+The Oz public API is offered as a full toolkit to implement the protocol as-is or to modify it to
+fit your needs. Most implementations will only need to use the [endpoints functions](#ozendpoints)
+and the `ticket.rsvp()` method.
 
-### `app(req, payload, options, callback)`
+### `Oz.endpoints`
 
-Generates an application ticket where:
-- `req` - the node.js http server request object.  The following properties are expected to exist on `req`:
-    - `method` - HTTP method used, for example: 'POST'.
-    - ` url` - path to app endpoint
-    - `headers` - HTTP headers with `host` and `authorization` populated.
-- `payload` - The raw HTTP request payload string.  Can be null, but a parameter must be provided in this place to the function.
-- `options` - the following options are available
-    - `encryptionPassword` - secret string used to encrypt the password
-    - `ticket` - options to pass to the `Oz.ticket.issue` function.
-    - `loadAppFunc` - has the following signature `(id, callback)`.  The callback expects to be called with the following signature `(err, app)`.  The `app`
-object is represented below in the [app-object-example].
-    - `hawk` - object that represents options to forward to Hawk `authenticate` function.  Refer to the [Hawk](https://github.com/hapijs/hawk)
-documentation for the full list of options.
-- `callback` - called with the following parameters: `err` and `ticket`
-
-### `reissue(req, payload, options, callback)`
-
-Reissue an existing ticket where:
-- `req` - the node.js http server request object.  The following properties are expected to exist on `req`:
-    - `method` - HTTP method used, for example: 'POST'.
-    - ` url` - path to app endpoint
-    - `headers` - HTTP headers with `host` and `authorization` populated.
-- `payload` - an object representing important payload restrictions.  The following properties are supported
-    - `issueTo` - sets the ticket `issueTo` option passed to `Oz.ticket.reissue`
-    - `scope` -  ticket scope, represented as an array of strings.
-- `options` - the following options are available
-    - `encryptionPassword` - secret string used to encrypt the password
-    - `ticket` - options to pass to the `Oz.ticket.issue` function.
-    - `loadAppFunc` - has the following signature `(id, callback)`.  The callback expects to be called with the following signature `(err, app)`.  The `app`
-object is represented below in the [app-object-example].
-    - `hawk` - object that represents options to forward to Hawk `authenticate` function.  Refer to the [Hawk](https://github.com/hapijs/hawk)
-documentation for the full list of options.
-- `callback` - called with the following parameters: `err` and `ticket`
-
-## `ticket`
-
-### `issue`
-The `issue` function will create a ticket and pass it to the `callback` function.  The function signature is `(app, grant, encryptionPassword, options, callback)`.
-
-#### `app`
-An object representing the object id, scope, and secret, see [app-object-example] below.
+The endpoint methods provide a complete HTTP request handler implementation which is designed to
+be plugged into an HTTP framework such as [**hapi**](http://hapijs.com). The
+[**scarecrow**](https://github.com/hueniverse/scarecrow) plugin provides an example of how these
+methods integrate with an existing server implementation.
 
 
-#### `grant`
-Represents the limitations of the ticket.  The user, scope, and expiration are all set.  See the [grant-object-example] below.
+#### `endpoints.app(req, payload, options, callback)`
 
-#### `encryptionPassword`
+Authenticates an application request and if valid, issues an application ticket where:
+- `req` - the node HTTP server request object.
+- `payload` - this argument is ignored and is defined only to keep the endpoint method signature
+  consistent with the other endpoints.
+- `options` - protocol options where:
+    - `encryptionPassword` - a required string used to generate the ticket encryption key. Must be
+      kept confidential.
+    - `loadAppFunc` - a required application lookup method using the signature `function(id, next)`
+      where:
+        - `id` - the application identifier being requested.
+        - `next` - the callback method used to return the requested application using the signature
+          `function(err, app)` where:
+            - `err` - an error condition.
+            - `app` - an object describing the application where:
+                - `id` - the application identifier.
+                - `scope` - an array with the default application scope.
+                - `delegate` - if `true`, the application is allowed to delegate a ticket to another
+                  application. Defaults to `false`.
+                - `key` - the shared secret used to authenticate.
+                - `algorithm` - the HMAC algorithm used to authenticate (e.g. HMAC-SHA256).
+    - `ticket` - default ticket generation options passed to `ticket.issue()`. Defaults to the ticket
+      issuance defaults.
+    - `hawk` - optional [Hawk](https://github.com/hapijs/hawk) configuration object. Defaults to the
+      Hawk defaults.
+- `callback` - the method used to return the request result with signature `function(err, ticket)` where
+    - `err` - an error condition.
+    - `ticket` - the generated ticket to be sent back to the client where:
+        - `id` - the ticket identifier used for making authenticated Hawk requests.
+        - `key` - a shared secret used to authenticate.
+        - `algorithm` - the HMAC algorithm used to authenticate (e.g. HMAC-SHA256).
+        - `exp` - ticket expiration time in milliseconds since 1/1/1970.
+        - `app` - the application id the ticket was issued to.
+        - `scope` - the ticket [scope](#scope). Defaults to `[]` if no scope is specified.
+        
 
+#### `endpoints.reissue(req, payload, options, callback)`
 
-#### `options`
-Below are the available options to provide to `options`.
+Reissue an existing ticket (the ticket used to authenticate the request) where:
+- `req` - the node HTTP server request object.
+- `payload` - The HTTP request payload fully parsed into an object with the following optional keys:
+    - `issueTo` - a different application identifier than the one of the current application. Used
+      to delegate access between applications. Defaults to the current application.
+    - `scope` - an array of scope strings which must be a subset of the ticket's granted scope.
+      Defaults to the original ticket scope.
+- `options` - protocol options where:
+    - `encryptionPassword` - a required string used to generate the ticket encryption key. Must be
+      kept confidential.
+    - `loadAppFunc` - a required application lookup method using the signature `function(id, next)`
+      where:
+        - `id` - the application identifier being requested.
+        - `next` - the callback method used to return the requested application using the signature
+          `function(err, app)` where:
+            - `err` - an error condition.
+            - `app` - an object describing the application where:
+                - `id` - the application identifier.
+                - `scope` - an array with the default application scope.
+                - `delegate` - if `true`, the application is allowed to delegate a ticket to another
+                  application. Defaults to `false`.
+                - `key` - the shared secret used to authenticate.
+                - `algorithm` - the HMAC algorithm used to authenticate (e.g. HMAC-SHA256).
+    - `loadGrantFunc` - a required grant lookup method using the signature `function(id, next)`
+      where:
+        - `id` - the grant identifier being requested.
+        - `next` - the callback method used to return the requested application using the signature
+          `function(err, grant, ext)` where:
+            - `err` - an error condition.
+            - `grant` - an object describing the grant where:
+                - `id` - the grant identifier.
+                - `app` - the application identifier.
+                - `user` - the user identifier.
+                - `exp` - grant expiration time in milliseconds since 1/1/1970.
+                - `scope` - an array with the scope granted by the user to the application.
+            - `ext` - an object used to include custom server data in the ticket and response where:
+                - `public` - an object which is included in the response under `ticket.ext` and in
+                  the encoded ticket as `ticket.ext.public`.
+                - `private` - an object which is included only in the encoded ticket as
+                  `ticket.ext.private`.
+    - `ticket` - default ticket parsing options passed to `ticket.parse()`. Defaults to the ticket
+      parsing defaults.
+    - `hawk` - optional [Hawk](https://github.com/hapijs/hawk) configuration object. Defaults to the
+      Hawk defaults.
+- `callback` - the method used to return the request result with signature `function(err, ticket)` where
+    - `err` - an error condition.
+    - `ticket` - the generated ticket to be sent back to the client where:
+        - `id` - the ticket identifier used for making authenticated Hawk requests.
+        - `key` - a shared secret used to authenticate.
+        - `algorithm` - the HMAC algorithm used to authenticate (e.g. HMAC-SHA256).
+        - `exp` - ticket expiration time in milliseconds since 1/1/1970.
+        - `app` - the application id the ticket was issued to.
+        - `user` - the user id if the ticket represents access to user resources. If no user id is included,
+          the ticket allows the application access to the application own resources only.
+        - `scope` - the ticket [scope](#scope). Defaults to `[]` if no scope is specified.
+        - `grant` - if `user` is set, includes the [grant](#grant) identifier referencing the authorization
+          granted by the user to the application. Can be a unique identifier or string encoding the grant
+          information as long as the server is able to parse the information later.
+        - `dlg` - if the ticket is the result of access delegation, the application id of the delegating
+          application.
+        - `ext` - custom server attached to the ticket.
 
-- `ttl` - time to live in milliseconds, defaults to 1 hour
-- `scope` -  ticket scope, represented as an array of strings
-- `ext` - server extension object with the following properties
-    - `tos` - version of terms of service
-    - `private` -  anything inside 'private' is only included in the encrypted portion
-- `iron` - object to override Iron defaults
-- `keyBytes` -  ticket secret size in bytes, defaults to 32
-- `hmacAlgorithm`-  Hawk algorithm to use, defaults to `'sha256'`
+#### `endpoints.rsvp(req, payload, options, callback)`
 
+Authenticates an application request and if valid, exchanges the provided rsvp with a ticket where:
+- `req` - the node HTTP server request object.
+- `payload` - The HTTP request payload fully parsed into an object with the following keys:
+    - `rsvp` - the required rsvp string provided to the user to bring back to the application after
+      granting authorization.
+- `options` - protocol options where:
+    - `encryptionPassword` - a required string used to generate the ticket encryption key. Must be
+      kept confidential.
+    - `loadAppFunc` - a required application lookup method using the signature `function(id, next)`
+      where:
+        - `id` - the application identifier being requested.
+        - `next` - the callback method used to return the requested application using the signature
+          `function(err, app)` where:
+            - `err` - an error condition.
+            - `app` - an object describing the application where:
+                - `id` - the application identifier.
+                - `scope` - an array with the default application scope.
+                - `delegate` - if `true`, the application is allowed to delegate a ticket to another
+                  application. Defaults to `false`.
+                - `key` - the shared secret used to authenticate.
+                - `algorithm` - the HMAC algorithm used to authenticate (e.g. HMAC-SHA256).
+    - `loadGrantFunc` - a required grant lookup method using the signature `function(id, next)`
+      where:
+        - `id` - the grant identifier being requested.
+        - `next` - the callback method used to return the requested application using the signature
+          `function(err, grant, ext)` where:
+            - `err` - an error condition.
+            - `grant` - an object describing the grant where:
+                - `id` - the grant identifier.
+                - `app` - the application identifier.
+                - `user` - the user identifier.
+                - `exp` - grant expiration time in milliseconds since 1/1/1970.
+                - `scope` - an array with the scope granted by the user to the application.
+            - `ext` - an object used to include custom server data in the ticket and response where:
+                - `public` - an object which is included in the response under `ticket.ext` and in
+                  the encoded ticket as `ticket.ext.public`.
+                - `private` - an object which is included only in the encoded ticket as
+                  `ticket.ext.private`.
+    - `ticket` - default ticket generation options passed to `ticket.issue()`. Defaults to the ticket
+      issuance defaults.
+    - `hawk` - optional [Hawk](https://github.com/hapijs/hawk) configuration object. Defaults to the
+      Hawk defaults.
+- `callback` - the method used to return the request result with signature `function(err, ticket)` where
+    - `err` - an error condition.
+    - `ticket` - the generated ticket to be sent back to the client where:
+        - `id` - the ticket identifier used for making authenticated Hawk requests.
+        - `key` - a shared secret used to authenticate.
+        - `algorithm` - the HMAC algorithm used to authenticate (e.g. HMAC-SHA256).
+        - `exp` - ticket expiration time in milliseconds since 1/1/1970.
+        - `app` - the application id the ticket was issued to.
+        - `user` - the user id if the ticket represents access to user resources. If no user id is included,
+          the ticket allows the application access to the application own resources only.
+        - `scope` - the ticket [scope](#scope). Defaults to `[]` if no scope is specified.
+        - `grant` - if `user` is set, includes the [grant](#grant) identifier referencing the authorization
+          granted by the user to the application. Can be a unique identifier or string encoding the grant
+          information as long as the server is able to parse the information later.
+        - `dlg` - if the ticket is the result of access delegation, the application id of the delegating
+          application.
+        - `ext` - custom server attached to the ticket.
 
-## `hawk`
-Access to the required `hawk` module from `Oz.hawk`.
+### `Oz.ticket`
 
-# Example Objects
+Ticket issuance, parsing, encoding, and re-issuance utilities.
 
-## App Object Example
-
-```js
-var app = {
-    id: '123',                          // Application id
-    scope: ['a', 'b']                   // Grant scope
-};
-```
-
-## Grant Object Example
-
-```js
-var grant = {
-    id: 'd832d9283hd9823dh',            // Persistent identifier used to issue additional tickets or revoke access
-    user: '456',                        // User id
-    exp: 1352535473414,                 // Grant expiration
-    scope: ['b']                        // Grant scope
-};
-```
+#### `ticket.issue()`
