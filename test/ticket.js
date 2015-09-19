@@ -169,6 +169,94 @@ describe('Ticket', function () {
 
     describe('reissue()', function () {
 
+        it('sets delegate to false', function (done) {
+
+            var encryptionPassword = 'welcome!';
+
+            var app = {
+                id: '123'
+            };
+
+            Oz.ticket.issue(app, null, encryptionPassword, {}, function (err, envelope) {
+
+                expect(err).to.not.exist();
+
+                Oz.ticket.parse(envelope.id, encryptionPassword, {}, function (err, ticket) {
+
+                    expect(err).to.not.exist();
+
+                    Oz.ticket.reissue(ticket, null, encryptionPassword, { issueTo: '345', delegate: false }, function (err, envelope2) {
+
+                        expect(err).to.not.exist();
+                        expect(envelope2.delegate).to.be.false();
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('errors on issueTo when delegate is not allowed', function (done) {
+
+            var encryptionPassword = 'welcome!';
+
+            var app = {
+                id: '123'
+            };
+
+            var options = {
+                delegate: false
+            };
+
+            Oz.ticket.issue(app, null, encryptionPassword, options, function (err, envelope) {
+
+                expect(err).to.not.exist();
+                expect(envelope.delegate).to.be.false();
+
+                Oz.ticket.parse(envelope.id, encryptionPassword, {}, function (err, ticket) {
+
+                    expect(err).to.not.exist();
+
+                    Oz.ticket.reissue(ticket, null, encryptionPassword, { issueTo: '345' }, function (err, envelope2) {
+
+                        expect(err).to.exist();
+                        expect(err.message).to.equal('Ticket does not allow delegation');
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('errors on delegate override', function (done) {
+
+            var encryptionPassword = 'welcome!';
+
+            var app = {
+                id: '123'
+            };
+
+            var options = {
+                delegate: false
+            };
+
+            Oz.ticket.issue(app, null, encryptionPassword, options, function (err, envelope) {
+
+                expect(err).to.not.exist();
+                expect(envelope.delegate).to.be.false();
+
+                Oz.ticket.parse(envelope.id, encryptionPassword, {}, function (err, ticket) {
+
+                    expect(err).to.not.exist();
+
+                    Oz.ticket.reissue(ticket, null, encryptionPassword, { delegate: true }, function (err, envelope2) {
+
+                        expect(err).to.exist();
+                        expect(err.message).to.equal('Cannot override ticket delegate restriction');
+                        done();
+                    });
+                });
+            });
+        });
+
         it('errors on missing parent ticket', function (done) {
 
             Oz.ticket.reissue(null, null, 'password', {}, function (err, ticket) {

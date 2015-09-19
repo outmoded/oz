@@ -120,6 +120,8 @@ However, unlike most Hawk credential identifiers, the Oz identifier is an encode
 - `user` - the user id if the ticket represents access to user resources. If no user id is included,
   the ticket allows the application access to the application own resources only.
 - `scope` - the ticket [scope](#scope). Defaults to `[]` if no scope is specified.
+- `delegate` - if `false`, the ticket cannot be delegated regardless of the application permissions.
+  Defaults to `true` which means use the application permissions to delegate.
 - `grant` - if `user` is set, includes the [grant](#grant) identifier referencing the authorization
   granted by the user to the application. Can be a unique identifier or string encoding the grant
   information as long as the server is able to parse the information later.
@@ -208,6 +210,8 @@ An object describing a ticket and its public properties:
 - `grant` - if `user` is set, includes the [grant](#grant) identifier referencing the authorization
     granted by the user to the application. Can be a unique identifier or string encoding the grant
     information as long as the server is able to parse the information later.
+- `delegate` - if `false`, the ticket cannot be delegated regardless of the application permissions.
+  Defaults to `true` which means use the application permissions to delegate.
 - `dlg` - if the ticket is the result of access delegation, the application id of the delegating
     application.
 - `ext` - custom server public data attached to the ticket.
@@ -378,6 +382,8 @@ ticket methods. Each endpoint utilizes a different subset of these options but i
 one common object to all (it will ignore unused options):
 - `ttl` - when generating a ticket, sets the ticket lifetime in milliseconds. Defaults to
     `3600000` (1 hour) for tickets and `60000` (1 minutes) for rsvps.
+- `delegate` - if `false`, the ticket cannot be delegated regardless of the application permissions.
+  Defaults to `true` which means use the application permissions to delegate.
 - `iron` - overrides the default [Iron](https://github.com/hueniverse/iron) configuration.
 - `keyBytes` - the [Hawk](https://github.com/hueniverse/hawk) key length in bytes. Defaults to
     `32`.
