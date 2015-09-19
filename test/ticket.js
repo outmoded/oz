@@ -50,11 +50,10 @@ describe('Ticket', function () {
                     private: {
                         x: 123
                     }
-                },
-                grant: grant
+                }
             };
 
-            Oz.ticket.issue(app, encryptionPassword, options, function (err, envelope) {
+            Oz.ticket.issue(app, grant, encryptionPassword, options, function (err, envelope) {
 
                 expect(err).to.not.exist();
                 expect(envelope.ext).to.deep.equal({ x: 'welcome' });
@@ -66,7 +65,7 @@ describe('Ticket', function () {
                     expect(err).to.not.exist();
                     expect(ticket.ext).to.deep.equal(options.ext);
 
-                    Oz.ticket.reissue(ticket, encryptionPassword, { grant: grant }, function (err, envelope2) {
+                    Oz.ticket.reissue(ticket, grant, encryptionPassword, {}, function (err, envelope2) {
 
                         expect(err).to.not.exist();
                         expect(envelope.ext).to.deep.equal({ x: 'welcome' });
@@ -123,11 +122,10 @@ describe('Ticket', function () {
             };
 
             var options = {
-                ttl: 10 * 60 * 1000,
-                grant: grant
+                ttl: 10 * 60 * 1000
             };
 
-            Oz.ticket.issue(app, 'password', options, function (err, envelope) {
+            Oz.ticket.issue(app, grant, 'password', options, function (err, envelope) {
 
                 expect(err).to.not.exist();
 
