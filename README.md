@@ -242,6 +242,10 @@ A required string used to generate the ticket encryption key. Must be kept confi
 must be the same across all Oz methods and deployments in order to allow the server to parse and
 generate compatible encoded strings.
 
+The `encryptionPassword` value is passed directly to the [Iron](https://github.com/hueniverse/iron)
+module which supports additional inputs for pre-generated encryption and integrity keys as well as
+password rotation.
+
 ##### `loadAppFunc`
 
 The application lookup method using the signature `function(id, next)` where:
