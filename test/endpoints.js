@@ -187,6 +187,50 @@ describe('Endpoints', function () {
             });
         });
 
+        it('reissues expired ticket', function (done) {
+
+            var req = {
+                method: 'POST',
+                url: '/oz/app',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
+                }
+            };
+
+            var options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, apps[id]);
+                },
+                ticket: {
+                    ttl: 5
+                }
+            };
+
+            Oz.endpoints.app(req, null, options, function (err, ticket) {
+
+                req = {
+                    method: 'POST',
+                    url: '/oz/reissue',
+                    headers: {
+                        host: 'example.com',
+                        authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).field
+                    }
+                };
+
+                setTimeout(function () {
+
+                    Oz.endpoints.reissue(req, {}, options, function (err, reissued) {
+
+                        expect(err).to.not.exist();
+                        done();
+                    });
+                }, 10);
+            });
+        });
+
         it('fails on app load error', function (done) {
 
             var req = {
@@ -765,6 +809,118 @@ describe('Endpoints', function () {
 
                     expect(err).to.not.exist();
                     done();
+                });
+            });
+        });
+
+        it('errors on invalid authentication', function (done) {
+
+            var options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, apps[id]);
+                },
+                ticket: {
+                    iron: Iron.defaults
+                }
+            };
+
+            var grant = {
+                id: 'a1b2c3d4e5f6g7h8i9j0',
+                app: appTicket.app,
+                user: 'john',
+                exp: Oz.hawk.utils.now() + 60000
+            };
+
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+
+                expect(err).to.not.exist();
+
+                options.loadGrantFunc = function (id, callback) {
+
+                    callback(null, grant);
+                };
+
+                var payload = { rsvp: rsvp };
+
+                var req = {
+                    method: 'POST',
+                    url: '/oz/rsvp',
+                    headers: {
+                        host: 'example.com'
+                    }
+                };
+
+                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+
+                    expect(err).to.exist();
+                    done();
+                });
+            });
+        });
+
+        it('errors on expired ticket', function (done) {
+
+            // App ticket
+
+            var req = {
+                method: 'POST',
+                url: '/oz/app',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
+                }
+            };
+
+            var options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, apps[id]);
+                },
+                ticket: {
+                    ttl: 5
+                }
+            };
+
+            Oz.endpoints.app(req, null, options, function (err, applicationTicket) {
+
+                var grant = {
+                    id: 'a1b2c3d4e5f6g7h8i9j0',
+                    app: applicationTicket.app,
+                    user: 'john',
+                    exp: Oz.hawk.utils.now() + 60000
+                };
+
+                Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+
+                    expect(err).to.not.exist();
+
+                    options.loadGrantFunc = function (id, callback) {
+
+                        callback(null, grant);
+                    };
+
+                    var payload = { rsvp: rsvp };
+
+                    req = {
+                        method: 'POST',
+                        url: '/oz/rsvp',
+                        headers: {
+                            host: 'example.com',
+                            authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', applicationTicket).field
+                        }
+                    };
+
+                    setTimeout(function () {
+
+                        Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+
+                            expect(err).to.exist();
+                            done();
+                        });
+                    }, 10);
                 });
             });
         });
