@@ -263,7 +263,7 @@ The application lookup method using the signature `function(id, next)` where:
 
 The grant lookup method using the signature `function(id, next)` where:
 - `id` - the grant identifier being requested.
-- `next` - the callback method used to return the requested application using the signature
+- `next` - the callback method used to return the requested grant using the signature
     `function(err, grant, ext)` where:
     - `err` - an error condition.
     - `grant` - a [grant](#grant-object) object.
