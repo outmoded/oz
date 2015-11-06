@@ -1,30 +1,32 @@
+'use strict';
+
 // Load modules
 
-var Code = require('code');
-var Iron = require('iron');
-var Lab = require('lab');
-var Oz = require('../lib');
+const Code = require('code');
+const Iron = require('iron');
+const Lab = require('lab');
+const Oz = require('../lib');
 
 
 // Declare internals
 
-var internals = {};
+const internals = {};
 
 
 // Test shortcuts
 
-var lab = exports.lab = Lab.script();
-var describe = lab.experiment;
-var it = lab.test;
-var before = lab.before;
-var expect = Code.expect;
+const lab = exports.lab = Lab.script();
+const describe = lab.experiment;
+const it = lab.test;
+const before = lab.before;
+const expect = Code.expect;
 
 
-describe('Endpoints', function () {
+describe('Endpoints', () => {
 
-    var encryptionPassword = 'password';
+    const encryptionPassword = 'password';
 
-    var apps = {
+    const apps = {
         social: {
             id: 'social',
             scope: ['a', 'b', 'c'],
@@ -39,11 +41,11 @@ describe('Endpoints', function () {
         }
     };
 
-    var appTicket = null;
+    let appTicket = null;
 
-    before(function (done) {
+    before((done) => {
 
-        var req = {
+        const req = {
             method: 'POST',
             url: '/oz/app',
             headers: {
@@ -52,7 +54,7 @@ describe('Endpoints', function () {
             }
         };
 
-        var options = {
+        const options = {
             encryptionPassword: encryptionPassword,
             loadAppFunc: function (id, callback) {
 
@@ -60,18 +62,18 @@ describe('Endpoints', function () {
             }
         };
 
-        Oz.endpoints.app(req, null, options, function (err, ticket) {
+        Oz.endpoints.app(req, null, options, (err, ticket) => {
 
             appTicket = ticket;
             done();
         });
     });
 
-    describe('app()', function () {
+    describe('app()', () => {
 
-        it('overrides defaults', function (done) {
+        it('overrides defaults', (done) => {
 
-            var req = {
+            const req = {
                 method: 'POST',
                 url: '/oz/app',
                 headers: {
@@ -80,7 +82,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -93,16 +95,16 @@ describe('Endpoints', function () {
                 hawk: {}
             };
 
-            Oz.endpoints.app(req, null, options, function (err, ticket) {
+            Oz.endpoints.app(req, null, options, (err, ticket) => {
 
                 expect(err).to.not.exist();
                 done();
             });
         });
 
-        it('fails on invalid app request (bad credentials)', function (done) {
+        it('fails on invalid app request (bad credentials)', (done) => {
 
-            var req = {
+            const req = {
                 method: 'POST',
                 url: '/oz/app',
                 headers: {
@@ -111,7 +113,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -119,7 +121,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            Oz.endpoints.app(req, null, options, function (err, ticket) {
+            Oz.endpoints.app(req, null, options, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Bad mac');
@@ -128,11 +130,11 @@ describe('Endpoints', function () {
         });
     });
 
-    describe('reissue()', function () {
+    describe('reissue()', () => {
 
-        it('allows null payload', function (done) {
+        it('allows null payload', (done) => {
 
-            var req = {
+            const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
@@ -141,7 +143,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -149,16 +151,16 @@ describe('Endpoints', function () {
                 }
             };
 
-            Oz.endpoints.reissue(req, null, options, function (err, ticket) {
+            Oz.endpoints.reissue(req, null, options, (err, ticket) => {
 
                 expect(err).to.not.exist();
                 done();
             });
         });
 
-        it('overrides defaults', function (done) {
+        it('overrides defaults', (done) => {
 
-            var req = {
+            const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
@@ -167,7 +169,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -180,16 +182,16 @@ describe('Endpoints', function () {
                 hawk: {}
             };
 
-            Oz.endpoints.reissue(req, {}, options, function (err, ticket) {
+            Oz.endpoints.reissue(req, {}, options, (err, ticket) => {
 
                 expect(err).to.not.exist();
                 done();
             });
         });
 
-        it('reissues expired ticket', function (done) {
+        it('reissues expired ticket', (done) => {
 
-            var req = {
+            let req = {
                 method: 'POST',
                 url: '/oz/app',
                 headers: {
@@ -198,7 +200,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -209,7 +211,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            Oz.endpoints.app(req, null, options, function (err, ticket) {
+            Oz.endpoints.app(req, null, options, (err, ticket) => {
 
                 req = {
                     method: 'POST',
@@ -220,9 +222,9 @@ describe('Endpoints', function () {
                     }
                 };
 
-                setTimeout(function () {
+                setTimeout(() => {
 
-                    Oz.endpoints.reissue(req, {}, options, function (err, reissued) {
+                    Oz.endpoints.reissue(req, {}, options, (err, reissued) => {
 
                         expect(err).to.not.exist();
                         done();
@@ -231,9 +233,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on app load error', function (done) {
+        it('fails on app load error', (done) => {
 
-            var req = {
+            const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
@@ -242,7 +244,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -250,7 +252,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            Oz.endpoints.reissue(req, {}, options, function (err, ticket) {
+            Oz.endpoints.reissue(req, {}, options, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('not found');
@@ -258,9 +260,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on missing app delegation rights', function (done) {
+        it('fails on missing app delegation rights', (done) => {
 
-            var req = {
+            const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
@@ -269,7 +271,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -277,7 +279,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            Oz.endpoints.reissue(req, { issueTo: apps.network.id }, options, function (err, ticket) {
+            Oz.endpoints.reissue(req, { issueTo: apps.network.id }, options, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Application has no delegation rights');
@@ -285,9 +287,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid reissue (request params)', function (done) {
+        it('fails on invalid reissue (request params)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -295,11 +297,11 @@ describe('Endpoints', function () {
                 }
             };
 
-            var payload = {
+            const payload = {
                 issueTo: null
             };
 
-            var req = {
+            const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
@@ -308,7 +310,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            Oz.endpoints.reissue(req, payload, options, function (err, delegatedTicket) {
+            Oz.endpoints.reissue(req, payload, options, (err, delegatedTicket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('child "issueTo" fails because ["issueTo" must be a string]');
@@ -316,9 +318,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid reissue (fails auth)', function (done) {
+        it('fails on invalid reissue (fails auth)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -326,7 +328,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var req = {
+            const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
@@ -336,7 +338,7 @@ describe('Endpoints', function () {
             };
 
             options.encryptionPassword = 'x';
-            Oz.endpoints.reissue(req, {}, options, function (err, delegatedTicket) {
+            Oz.endpoints.reissue(req, {}, options, (err, delegatedTicket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Bad hmac value');
@@ -344,9 +346,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid reissue (invalid app)', function (done) {
+        it('fails on invalid reissue (invalid app)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -354,7 +356,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var req = {
+            const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
@@ -368,7 +370,7 @@ describe('Endpoints', function () {
                 callback(null, null);
             };
 
-            Oz.endpoints.reissue(req, {}, options, function (err, delegatedTicket) {
+            Oz.endpoints.reissue(req, {}, options, (err, delegatedTicket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid application');
@@ -376,9 +378,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid reissue (missing grant)', function (done) {
+        it('fails on invalid reissue (missing grant)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -386,14 +388,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -402,9 +404,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req1 = {
+                const req1 = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -413,11 +415,11 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req1, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req1, payload, options, (err, ticket) => {
 
                     expect(err).to.not.exist();
 
-                    var req2 = {
+                    const req2 = {
                         method: 'POST',
                         url: '/oz/reissue',
                         headers: {
@@ -431,7 +433,7 @@ describe('Endpoints', function () {
                         callback(null, null);
                     };
 
-                    Oz.endpoints.reissue(req2, {}, options, function (err, delegatedTicket) {
+                    Oz.endpoints.reissue(req2, {}, options, (err, delegatedTicket) => {
 
                         expect(err).to.exist();
                         expect(err.message).to.equal('Invalid grant');
@@ -441,9 +443,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid reissue (grant error)', function (done) {
+        it('fails on invalid reissue (grant error)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -451,14 +453,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -467,9 +469,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req1 = {
+                const req1 = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -478,11 +480,11 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req1, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req1, payload, options, (err, ticket) => {
 
                     expect(err).to.not.exist();
 
-                    var req2 = {
+                    const req2 = {
                         method: 'POST',
                         url: '/oz/reissue',
                         headers: {
@@ -496,7 +498,7 @@ describe('Endpoints', function () {
                         callback(new Error('what?'));
                     };
 
-                    Oz.endpoints.reissue(req2, {}, options, function (err, delegatedTicket) {
+                    Oz.endpoints.reissue(req2, {}, options, (err, delegatedTicket) => {
 
                         expect(err).to.exist();
                         expect(err.message).to.equal('what?');
@@ -506,9 +508,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid reissue (grant user mismatch)', function (done) {
+        it('fails on invalid reissue (grant user mismatch)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -516,14 +518,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -532,9 +534,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req1 = {
+                const req1 = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -543,11 +545,11 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req1, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req1, payload, options, (err, ticket) => {
 
                     expect(err).to.not.exist();
 
-                    var req2 = {
+                    const req2 = {
                         method: 'POST',
                         url: '/oz/reissue',
                         headers: {
@@ -562,7 +564,7 @@ describe('Endpoints', function () {
                         callback(null, grant);
                     };
 
-                    Oz.endpoints.reissue(req2, {}, options, function (err, delegatedTicket) {
+                    Oz.endpoints.reissue(req2, {}, options, (err, delegatedTicket) => {
 
                         expect(err).to.exist();
                         expect(err.message).to.equal('Invalid grant');
@@ -572,9 +574,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid reissue (grant missing exp)', function (done) {
+        it('fails on invalid reissue (grant missing exp)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -582,14 +584,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -598,9 +600,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req1 = {
+                const req1 = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -609,11 +611,11 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req1, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req1, payload, options, (err, ticket) => {
 
                     expect(err).to.not.exist();
 
-                    var req2 = {
+                    const req2 = {
                         method: 'POST',
                         url: '/oz/reissue',
                         headers: {
@@ -628,7 +630,7 @@ describe('Endpoints', function () {
                         callback(null, grant);
                     };
 
-                    Oz.endpoints.reissue(req2, {}, options, function (err, delegatedTicket) {
+                    Oz.endpoints.reissue(req2, {}, options, (err, delegatedTicket) => {
 
                         expect(err).to.exist();
                         expect(err.message).to.equal('Invalid grant');
@@ -638,9 +640,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid reissue (grant app does not match app or dlg)', function (done) {
+        it('fails on invalid reissue (grant app does not match app or dlg)', (done) => {
 
-            var applications = {
+            const applications = {
                 social: {
                     id: 'social',
                     key: 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
@@ -656,7 +658,7 @@ describe('Endpoints', function () {
 
             // The app requests an app ticket using Oz.hawk authentication
 
-            var req = {
+            let req = {
                 method: 'POST',
                 url: '/oz/app',
                 headers: {
@@ -665,7 +667,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -673,20 +675,20 @@ describe('Endpoints', function () {
                 }
             };
 
-            Oz.endpoints.app(req, null, options, function (err, applicationTicket) {
+            Oz.endpoints.app(req, null, options, (err, applicationTicket) => {
 
                 expect(err).to.not.exist();
 
                 // The user is redirected to the server, logs in, and grant app access, resulting in an rsvp
 
-                var grant = {
+                const grant = {
                     id: 'a1b2c3d4e5f6g7h8i9j0',
                     app: applicationTicket.app,
                     user: 'john',
                     exp: Oz.hawk.utils.now() + 60000
                 };
 
-                Oz.ticket.rsvp(applications.social, grant, encryptionPassword, {}, function (err, rsvp) {
+                Oz.ticket.rsvp(applications.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                     expect(err).to.not.exist();
 
@@ -699,7 +701,7 @@ describe('Endpoints', function () {
 
                     // The app exchanges the rsvp for a ticket
 
-                    var payload = { rsvp: rsvp };
+                    let payload = { rsvp: rsvp };
 
                     req = {
                         method: 'POST',
@@ -710,7 +712,7 @@ describe('Endpoints', function () {
                         }
                     };
 
-                    Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                    Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                         expect(err).to.not.exist();
 
@@ -729,7 +731,7 @@ describe('Endpoints', function () {
                             }
                         };
 
-                        Oz.endpoints.reissue(req, payload, options, function (err, delegatedTicket) {
+                        Oz.endpoints.reissue(req, payload, options, (err, delegatedTicket) => {
 
                             expect(err).to.not.exist();
 
@@ -750,7 +752,7 @@ describe('Endpoints', function () {
                                 callback(null, grant);
                             };
 
-                            Oz.endpoints.reissue(req, {}, options, function (err, reissuedDelegatedTicket) {
+                            Oz.endpoints.reissue(req, {}, options, (err, reissuedDelegatedTicket) => {
 
                                 expect(err).to.exist();
                                 expect(err.message).to.equal('Invalid grant');
@@ -763,11 +765,11 @@ describe('Endpoints', function () {
         });
     });
 
-    describe('rsvp()', function () {
+    describe('rsvp()', () => {
 
-        it('overrides defaults', function (done) {
+        it('overrides defaults', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -778,14 +780,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -794,9 +796,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -805,7 +807,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.not.exist();
                     done();
@@ -813,9 +815,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('errors on invalid authentication', function (done) {
+        it('errors on invalid authentication', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -826,14 +828,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -842,9 +844,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -852,7 +854,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     done();
@@ -860,11 +862,11 @@ describe('Endpoints', function () {
             });
         });
 
-        it('errors on expired ticket', function (done) {
+        it('errors on expired ticket', (done) => {
 
             // App ticket
 
-            var req = {
+            let req = {
                 method: 'POST',
                 url: '/oz/app',
                 headers: {
@@ -873,7 +875,7 @@ describe('Endpoints', function () {
                 }
             };
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -884,16 +886,16 @@ describe('Endpoints', function () {
                 }
             };
 
-            Oz.endpoints.app(req, null, options, function (err, applicationTicket) {
+            Oz.endpoints.app(req, null, options, (err, applicationTicket) => {
 
-                var grant = {
+                const grant = {
                     id: 'a1b2c3d4e5f6g7h8i9j0',
                     app: applicationTicket.app,
                     user: 'john',
                     exp: Oz.hawk.utils.now() + 60000
                 };
 
-                Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+                Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                     expect(err).to.not.exist();
 
@@ -902,7 +904,7 @@ describe('Endpoints', function () {
                         callback(null, grant);
                     };
 
-                    var payload = { rsvp: rsvp };
+                    const payload = { rsvp: rsvp };
 
                     req = {
                         method: 'POST',
@@ -913,9 +915,9 @@ describe('Endpoints', function () {
                         }
                     };
 
-                    setTimeout(function () {
+                    setTimeout(() => {
 
-                        Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                        Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                             expect(err).to.exist();
                             done();
@@ -925,9 +927,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('errors on missing payload', function (done) {
+        it('errors on missing payload', (done) => {
 
-            Oz.endpoints.rsvp({}, null, {}, function (err, ticket) {
+            Oz.endpoints.rsvp({}, null, {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Missing required payload');
@@ -935,9 +937,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (request params)', function (done) {
+        it('fails on invalid rsvp (request params)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -945,14 +947,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -961,9 +963,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: '' };
+                const payload = { rsvp: '' };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -972,7 +974,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('child "rsvp" fails because ["rsvp" is not allowed to be empty]');
@@ -981,9 +983,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (invalid auth)', function (done) {
+        it('fails on invalid rsvp (invalid auth)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -991,14 +993,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1007,9 +1009,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: 'abc' };
+                const payload = { rsvp: 'abc' };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1018,7 +1020,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Incorrect number of sealed components');
@@ -1027,9 +1029,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (user ticket)', function (done) {
+        it('fails on invalid rsvp (user ticket)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -1037,14 +1039,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1053,9 +1055,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var body = { rsvp: rsvp };
+                const body = { rsvp: rsvp };
 
-                var req1 = {
+                const req1 = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1064,11 +1066,11 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req1, body, options, function (err, ticket1) {
+                Oz.endpoints.rsvp(req1, body, options, (err, ticket1) => {
 
                     expect(err).to.not.exist();
 
-                    var req2 = {
+                    const req2 = {
                         method: 'POST',
                         url: '/oz/rsvp',
                         headers: {
@@ -1077,7 +1079,7 @@ describe('Endpoints', function () {
                         }
                     };
 
-                    Oz.endpoints.rsvp(req2, body, options, function (err, ticket2) {
+                    Oz.endpoints.rsvp(req2, body, options, (err, ticket2) => {
 
                         expect(err).to.exist();
                         expect(err.message).to.equal('User ticket cannot be used on an application endpoint');
@@ -1087,9 +1089,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (mismatching apps)', function (done) {
+        it('fails on invalid rsvp (mismatching apps)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -1097,14 +1099,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.network, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.network, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1113,9 +1115,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1124,7 +1126,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Mismatching ticket and rsvp apps');
@@ -1133,9 +1135,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (expired rsvp)', function (done) {
+        it('fails on invalid rsvp (expired rsvp)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -1143,14 +1145,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, { ttl: 1 }, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, { ttl: 1 }, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1159,9 +1161,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1170,7 +1172,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Expired rsvp');
@@ -1179,9 +1181,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (expired grant)', function (done) {
+        it('fails on invalid rsvp (expired grant)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -1189,14 +1191,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() - 1000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1205,9 +1207,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1216,7 +1218,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid grant');
@@ -1225,9 +1227,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (missing grant)', function (done) {
+        it('fails on invalid rsvp (missing grant)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -1238,14 +1240,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1254,9 +1256,9 @@ describe('Endpoints', function () {
                     callback(null, null);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1265,7 +1267,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid grant');
@@ -1274,9 +1276,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (grant app mismatch)', function (done) {
+        it('fails on invalid rsvp (grant app mismatch)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -1287,14 +1289,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1304,9 +1306,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1315,7 +1317,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid grant');
@@ -1324,9 +1326,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (grant missing exp)', function (done) {
+        it('fails on invalid rsvp (grant missing exp)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -1337,14 +1339,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1354,9 +1356,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1365,7 +1367,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid grant');
@@ -1374,9 +1376,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (grant error)', function (done) {
+        it('fails on invalid rsvp (grant error)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -1387,14 +1389,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1403,9 +1405,9 @@ describe('Endpoints', function () {
                     callback(new Error('boom'));
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1414,7 +1416,7 @@ describe('Endpoints', function () {
                     }
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('boom');
@@ -1423,9 +1425,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (app error)', function (done) {
+        it('fails on invalid rsvp (app error)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -1436,14 +1438,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1452,9 +1454,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1468,7 +1470,7 @@ describe('Endpoints', function () {
                     return callback(new Error('nope'));
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('nope');
@@ -1477,9 +1479,9 @@ describe('Endpoints', function () {
             });
         });
 
-        it('fails on invalid rsvp (invalid app)', function (done) {
+        it('fails on invalid rsvp (invalid app)', (done) => {
 
-            var options = {
+            const options = {
                 encryptionPassword: encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
@@ -1487,14 +1489,14 @@ describe('Endpoints', function () {
                 }
             };
 
-            var grant = {
+            const grant = {
                 id: 'a1b2c3d4e5f6g7h8i9j0',
                 app: appTicket.app,
                 user: 'john',
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, function (err, rsvp) {
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
 
                 expect(err).to.not.exist();
 
@@ -1503,9 +1505,9 @@ describe('Endpoints', function () {
                     callback(null, grant);
                 };
 
-                var payload = { rsvp: rsvp };
+                const payload = { rsvp: rsvp };
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -1519,7 +1521,7 @@ describe('Endpoints', function () {
                     callback(null, null);
                 };
 
-                Oz.endpoints.rsvp(req, payload, options, function (err, ticket) {
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Invalid application');

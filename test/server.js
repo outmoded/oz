@@ -1,56 +1,58 @@
+'use strict';
+
 // Load modules
 
-var Code = require('code');
-var Lab = require('lab');
-var Oz = require('../lib');
+const Code = require('code');
+const Lab = require('lab');
+const Oz = require('../lib');
 
 
 // Declare internals
 
-var internals = {};
+const internals = {};
 
 
 // Test shortcuts
 
-var lab = exports.lab = Lab.script();
-var describe = lab.experiment;
-var it = lab.test;
-var expect = Code.expect;
+const lab = exports.lab = Lab.script();
+const describe = lab.experiment;
+const it = lab.test;
+const expect = Code.expect;
 
 
-describe('Server', function () {
+describe('Server', () => {
 
-    describe('authenticate()', function () {
+    describe('authenticate()', () => {
 
-        it('throws an error on missing password', function (done) {
+        it('throws an error on missing password', (done) => {
 
-            expect(function () {
+            expect(() => {
 
-                Oz.server.authenticate(null, null, {}, function () { });
+                Oz.server.authenticate(null, null, {}, () => { });
             }).to.throw('Invalid encryption password');
             done();
         });
 
-        var encryptionPassword = 'welcome!';
+        const encryptionPassword = 'welcome!';
 
-        var app = {
+        const app = {
             id: '123'
         };
 
-        it('authenticates a request', function (done) {
+        it('authenticates a request', (done) => {
 
-            var grant = {
+            const grant = {
                 id: 's81u29n1812',
                 user: '456',
                 exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, grant, encryptionPassword, {}, (err, envelope) => {
 
                 expect(err).to.not.exist();
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -59,7 +61,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
+                Oz.server.authenticate(req, encryptionPassword, {}, (err, credentials, artifacts) => {
 
                     expect(err).to.not.exist();
                     done();
@@ -67,20 +69,20 @@ describe('Server', function () {
             });
         });
 
-        it('authenticates a request (hawk options)', function (done) {
+        it('authenticates a request (hawk options)', (done) => {
 
-            var grant = {
+            const grant = {
                 id: 's81u29n1812',
                 user: '456',
                 exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, grant, encryptionPassword, {}, (err, envelope) => {
 
                 expect(err).to.not.exist();
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -89,7 +91,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, encryptionPassword, { hawk: { hostHeaderName: 'hostx1' } }, function (err, credentials, artifacts) {
+                Oz.server.authenticate(req, encryptionPassword, { hawk: { hostHeaderName: 'hostx1' } }, (err, credentials, artifacts) => {
 
                     expect(err).to.not.exist();
                     done();
@@ -97,20 +99,20 @@ describe('Server', function () {
             });
         });
 
-        it('fails to authenticate a request with bad password', function (done) {
+        it('fails to authenticate a request with bad password', (done) => {
 
-            var grant = {
+            const grant = {
                 id: 's81u29n1812',
                 user: '456',
                 exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, grant, encryptionPassword, {}, (err, envelope) => {
 
                 expect(err).to.not.exist();
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -119,7 +121,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, 'x', {}, function (err, credentials, artifacts) {
+                Oz.server.authenticate(req, 'x', {}, (err, credentials, artifacts) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Bad hmac value');
@@ -128,20 +130,20 @@ describe('Server', function () {
             });
         });
 
-        it('fails to authenticate a request with expired ticket', function (done) {
+        it('fails to authenticate a request with expired ticket', (done) => {
 
-            var grant = {
+            const grant = {
                 id: 's81u29n1812',
                 user: '456',
                 exp: Oz.hawk.utils.now() - 5000,
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, grant, encryptionPassword, {}, (err, envelope) => {
 
                 expect(err).to.not.exist();
 
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -150,7 +152,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
+                Oz.server.authenticate(req, encryptionPassword, {}, (err, credentials, artifacts) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Expired ticket');
@@ -160,21 +162,21 @@ describe('Server', function () {
             });
         });
 
-        it('fails to authenticate a request with mismatching app id', function (done) {
+        it('fails to authenticate a request with mismatching app id', (done) => {
 
-            var grant = {
+            const grant = {
                 id: 's81u29n1812',
                 user: '456',
                 exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, grant, encryptionPassword, {}, (err, envelope) => {
 
                 expect(err).to.not.exist();
 
                 envelope.app = '567';
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -183,7 +185,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
+                Oz.server.authenticate(req, encryptionPassword, {}, (err, credentials, artifacts) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Mismatching application id');
@@ -192,21 +194,21 @@ describe('Server', function () {
             });
         });
 
-        it('fails to authenticate a request with mismatching dlg id', function (done) {
+        it('fails to authenticate a request with mismatching dlg id', (done) => {
 
-            var grant = {
+            const grant = {
                 id: 's81u29n1812',
                 user: '456',
                 exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, grant, encryptionPassword, {}, (err, envelope) => {
 
                 expect(err).to.not.exist();
 
                 envelope.dlg = '567';
-                var req = {
+                const req = {
                     method: 'POST',
                     url: '/oz/rsvp',
                     headers: {
@@ -215,7 +217,7 @@ describe('Server', function () {
                     }
                 };
 
-                Oz.server.authenticate(req, encryptionPassword, {}, function (err, credentials, artifacts) {
+                Oz.server.authenticate(req, encryptionPassword, {}, (err, credentials, artifacts) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Mismatching delegated application id');

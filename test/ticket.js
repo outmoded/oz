@@ -1,47 +1,49 @@
+'use strict';
+
 // Load modules
 
-var Code = require('code');
-var Cryptiles = require('cryptiles');
-var Hoek = require('hoek');
-var Iron = require('iron');
-var Lab = require('lab');
-var Oz = require('../lib');
+const Code = require('code');
+const Cryptiles = require('cryptiles');
+const Hoek = require('hoek');
+const Iron = require('iron');
+const Lab = require('lab');
+const Oz = require('../lib');
 
 
 // Declare internals
 
-var internals = {};
+const internals = {};
 
 
 // Test shortcuts
 
-var lab = exports.lab = Lab.script();
-var describe = lab.experiment;
-var it = lab.test;
-var expect = Code.expect;
+const lab = exports.lab = Lab.script();
+const describe = lab.experiment;
+const it = lab.test;
+const expect = Code.expect;
 
 
-describe('Ticket', function () {
+describe('Ticket', () => {
 
-    describe('issue()', function () {
+    describe('issue()', () => {
 
-        it('should construct a valid ticket', function (done) {
+        it('should construct a valid ticket', (done) => {
 
-            var encryptionPassword = 'welcome!';
+            const encryptionPassword = 'welcome!';
 
-            var app = {
+            const app = {
                 id: '123',
                 scope: ['a', 'b']
             };
 
-            var grant = {
+            const grant = {
                 id: 's81u29n1812',
                 user: '456',
                 exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a']
             };
 
-            var options = {
+            const options = {
                 ttl: 10 * 60 * 1000,
                 ext: {
                     public: {
@@ -53,19 +55,19 @@ describe('Ticket', function () {
                 }
             };
 
-            Oz.ticket.issue(app, grant, encryptionPassword, options, function (err, envelope) {
+            Oz.ticket.issue(app, grant, encryptionPassword, options, (err, envelope) => {
 
                 expect(err).to.not.exist();
                 expect(envelope.ext).to.deep.equal({ x: 'welcome' });
                 expect(envelope.exp).to.equal(grant.exp);
                 expect(envelope.scope).to.deep.equal(['a']);
 
-                Oz.ticket.parse(envelope.id, encryptionPassword, {}, function (err, ticket) {
+                Oz.ticket.parse(envelope.id, encryptionPassword, {}, (err, ticket) => {
 
                     expect(err).to.not.exist();
                     expect(ticket.ext).to.deep.equal(options.ext);
 
-                    Oz.ticket.reissue(ticket, grant, encryptionPassword, {}, function (err, envelope2) {
+                    Oz.ticket.reissue(ticket, grant, encryptionPassword, {}, (err, envelope2) => {
 
                         expect(err).to.not.exist();
                         expect(envelope.ext).to.deep.equal({ x: 'welcome' });
@@ -76,19 +78,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing app', function (done) {
+        it('errors on missing app', (done) => {
 
-            Oz.ticket.issue(null, null, 'password', {}, function (err, ticket) {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('Invalid application object');
-                done();
-            });
-        });
-
-        it('errors on invalid app', function (done) {
-
-            Oz.ticket.issue({}, null, 'password', {}, function (err, ticket) {
+            Oz.ticket.issue(null, null, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid application object');
@@ -96,9 +88,19 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on invalid grant (missing id)', function (done) {
+        it('errors on invalid app', (done) => {
 
-            Oz.ticket.issue({ id: 'abc' }, {}, 'password', {}, function (err, ticket) {
+            Oz.ticket.issue({}, null, 'password', {}, (err, ticket) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid application object');
+                done();
+            });
+        });
+
+        it('errors on invalid grant (missing id)', (done) => {
+
+            Oz.ticket.issue({ id: 'abc' }, {}, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid grant object');
@@ -106,19 +108,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on invalid grant (missing user)', function (done) {
+        it('errors on invalid grant (missing user)', (done) => {
 
-            Oz.ticket.issue({ id: 'abc' }, { id: '123' }, 'password', {}, function (err, ticket) {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('Invalid grant object');
-                done();
-            });
-        });
-
-        it('errors on invalid grant (missing exp)', function (done) {
-
-            Oz.ticket.issue({ id: 'abc' }, { id: '123', user: 'steve' }, 'password', {}, function (err, ticket) {
+            Oz.ticket.issue({ id: 'abc' }, { id: '123' }, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid grant object');
@@ -126,9 +118,19 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on invalid grant (scope outside app)', function (done) {
+        it('errors on invalid grant (missing exp)', (done) => {
 
-            Oz.ticket.issue({ id: 'abc', scope: ['a'] }, { id: '123', user: 'steve', exp: 1442690715989, scope: ['b'] }, 'password', {}, function (err, ticket) {
+            Oz.ticket.issue({ id: 'abc' }, { id: '123', user: 'steve' }, 'password', {}, (err, ticket) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid grant object');
+                done();
+            });
+        });
+
+        it('errors on invalid grant (scope outside app)', (done) => {
+
+            Oz.ticket.issue({ id: 'abc', scope: ['a'] }, { id: '123', user: 'steve', exp: 1442690715989, scope: ['b'] }, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Grant scope is not a subset of the application scope');
@@ -136,9 +138,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on invalid app scope', function (done) {
+        it('errors on invalid app scope', (done) => {
 
-            Oz.ticket.issue({ id: 'abc', scope: 'a' }, null, 'password', {}, function (err, ticket) {
+            Oz.ticket.issue({ id: 'abc', scope: 'a' }, null, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('scope not instance of Array');
@@ -146,9 +148,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on invalid password', function (done) {
+        it('errors on invalid password', (done) => {
 
-            Oz.ticket.issue({ id: 'abc' }, null, '', {}, function (err, ticket) {
+            Oz.ticket.issue({ id: 'abc' }, null, '', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid encryption password');
@@ -156,9 +158,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on invalid options', function (done) {
+        it('errors on invalid options', (done) => {
 
-            Oz.ticket.issue({ id: 'abc' }, null, 'password', null, function (err, ticket) {
+            Oz.ticket.issue({ id: 'abc' }, null, 'password', null, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid options object');
@@ -167,25 +169,25 @@ describe('Ticket', function () {
         });
     });
 
-    describe('reissue()', function () {
+    describe('reissue()', () => {
 
-        it('sets delegate to false', function (done) {
+        it('sets delegate to false', (done) => {
 
-            var encryptionPassword = 'welcome!';
+            const encryptionPassword = 'welcome!';
 
-            var app = {
+            const app = {
                 id: '123'
             };
 
-            Oz.ticket.issue(app, null, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.issue(app, null, encryptionPassword, {}, (err, envelope) => {
 
                 expect(err).to.not.exist();
 
-                Oz.ticket.parse(envelope.id, encryptionPassword, {}, function (err, ticket) {
+                Oz.ticket.parse(envelope.id, encryptionPassword, {}, (err, ticket) => {
 
                     expect(err).to.not.exist();
 
-                    Oz.ticket.reissue(ticket, null, encryptionPassword, { issueTo: '345', delegate: false }, function (err, envelope2) {
+                    Oz.ticket.reissue(ticket, null, encryptionPassword, { issueTo: '345', delegate: false }, (err, envelope2) => {
 
                         expect(err).to.not.exist();
                         expect(envelope2.delegate).to.be.false();
@@ -195,28 +197,28 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on issueTo when delegate is not allowed', function (done) {
+        it('errors on issueTo when delegate is not allowed', (done) => {
 
-            var encryptionPassword = 'welcome!';
+            const encryptionPassword = 'welcome!';
 
-            var app = {
+            const app = {
                 id: '123'
             };
 
-            var options = {
+            const options = {
                 delegate: false
             };
 
-            Oz.ticket.issue(app, null, encryptionPassword, options, function (err, envelope) {
+            Oz.ticket.issue(app, null, encryptionPassword, options, (err, envelope) => {
 
                 expect(err).to.not.exist();
                 expect(envelope.delegate).to.be.false();
 
-                Oz.ticket.parse(envelope.id, encryptionPassword, {}, function (err, ticket) {
+                Oz.ticket.parse(envelope.id, encryptionPassword, {}, (err, ticket) => {
 
                     expect(err).to.not.exist();
 
-                    Oz.ticket.reissue(ticket, null, encryptionPassword, { issueTo: '345' }, function (err, envelope2) {
+                    Oz.ticket.reissue(ticket, null, encryptionPassword, { issueTo: '345' }, (err, envelope2) => {
 
                         expect(err).to.exist();
                         expect(err.message).to.equal('Ticket does not allow delegation');
@@ -226,28 +228,28 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on delegate override', function (done) {
+        it('errors on delegate override', (done) => {
 
-            var encryptionPassword = 'welcome!';
+            const encryptionPassword = 'welcome!';
 
-            var app = {
+            const app = {
                 id: '123'
             };
 
-            var options = {
+            const options = {
                 delegate: false
             };
 
-            Oz.ticket.issue(app, null, encryptionPassword, options, function (err, envelope) {
+            Oz.ticket.issue(app, null, encryptionPassword, options, (err, envelope) => {
 
                 expect(err).to.not.exist();
                 expect(envelope.delegate).to.be.false();
 
-                Oz.ticket.parse(envelope.id, encryptionPassword, {}, function (err, ticket) {
+                Oz.ticket.parse(envelope.id, encryptionPassword, {}, (err, ticket) => {
 
                     expect(err).to.not.exist();
 
-                    Oz.ticket.reissue(ticket, null, encryptionPassword, { delegate: true }, function (err, envelope2) {
+                    Oz.ticket.reissue(ticket, null, encryptionPassword, { delegate: true }, (err, envelope2) => {
 
                         expect(err).to.exist();
                         expect(err.message).to.equal('Cannot override ticket delegate restriction');
@@ -257,9 +259,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing parent ticket', function (done) {
+        it('errors on missing parent ticket', (done) => {
 
-            Oz.ticket.reissue(null, null, 'password', {}, function (err, ticket) {
+            Oz.ticket.reissue(null, null, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid parent ticket object');
@@ -267,9 +269,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing password', function (done) {
+        it('errors on missing password', (done) => {
 
-            Oz.ticket.reissue({}, null, '', {}, function (err, ticket) {
+            Oz.ticket.reissue({}, null, '', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid encryption password');
@@ -277,9 +279,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing options', function (done) {
+        it('errors on missing options', (done) => {
 
-            Oz.ticket.reissue({}, null, 'password', null, function (err, ticket) {
+            Oz.ticket.reissue({}, null, 'password', null, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid options object');
@@ -287,9 +289,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing parent scope', function (done) {
+        it('errors on missing parent scope', (done) => {
 
-            Oz.ticket.reissue({}, null, 'password', { scope: ['a'] }, function (err, ticket) {
+            Oz.ticket.reissue({}, null, 'password', { scope: ['a'] }, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('New scope is not a subset of the parent ticket scope');
@@ -297,19 +299,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on invalid parent scope', function (done) {
+        it('errors on invalid parent scope', (done) => {
 
-            Oz.ticket.reissue({ scope: 'a' }, null, 'password', { scope: ['a'] }, function (err, ticket) {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('scope not instance of Array');
-                done();
-            });
-        });
-
-        it('errors on invalid options scope', function (done) {
-
-            Oz.ticket.reissue({ scope: ['a'] }, null, 'password', { scope: 'a' }, function (err, ticket) {
+            Oz.ticket.reissue({ scope: 'a' }, null, 'password', { scope: ['a'] }, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('scope not instance of Array');
@@ -317,9 +309,19 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on invalid grant (missing id)', function (done) {
+        it('errors on invalid options scope', (done) => {
 
-            Oz.ticket.reissue({}, {}, 'password', {}, function (err, ticket) {
+            Oz.ticket.reissue({ scope: ['a'] }, null, 'password', { scope: 'a' }, (err, ticket) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('scope not instance of Array');
+                done();
+            });
+        });
+
+        it('errors on invalid grant (missing id)', (done) => {
+
+            Oz.ticket.reissue({}, {}, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid grant object');
@@ -327,19 +329,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on invalid grant (missing user)', function (done) {
+        it('errors on invalid grant (missing user)', (done) => {
 
-            Oz.ticket.reissue({}, { id: 'abc' }, 'password', {}, function (err, ticket) {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('Invalid grant object');
-                done();
-            });
-        });
-
-        it('errors on invalid grant (missing exp)', function (done) {
-
-            Oz.ticket.reissue({}, { id: 'abc', user: 'steve' }, 'password', {}, function (err, ticket) {
+            Oz.ticket.reissue({}, { id: 'abc' }, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid grant object');
@@ -347,9 +339,19 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on options.issueTo and ticket.dlg conflict', function (done) {
+        it('errors on invalid grant (missing exp)', (done) => {
 
-            Oz.ticket.reissue({ dlg: '123' }, null, 'password', { issueTo: '345' }, function (err, ticket) {
+            Oz.ticket.reissue({}, { id: 'abc', user: 'steve' }, 'password', {}, (err, ticket) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid grant object');
+                done();
+            });
+        });
+
+        it('errors on options.issueTo and ticket.dlg conflict', (done) => {
+
+            Oz.ticket.reissue({ dlg: '123' }, null, 'password', { issueTo: '345' }, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Cannot re-delegate');
@@ -357,19 +359,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on mismatching grants (missing grant)', function (done) {
+        it('errors on mismatching grants (missing grant)', (done) => {
 
-            Oz.ticket.reissue({ grant: '123' }, null, 'password', {}, function (err, ticket) {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('Parent ticket grant does not match options.grant');
-                done();
-            });
-        });
-
-        it('errors on mismatching grants (missing parent)', function (done) {
-
-            Oz.ticket.reissue({}, { id: '123', user: 'steve', exp: 1442690715989 }, 'password', {}, function (err, ticket) {
+            Oz.ticket.reissue({ grant: '123' }, null, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Parent ticket grant does not match options.grant');
@@ -377,9 +369,19 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on mismatching grants (different)', function (done) {
+        it('errors on mismatching grants (missing parent)', (done) => {
 
-            Oz.ticket.reissue({ grant: '234' }, { id: '123', user: 'steve', exp: 1442690715989 }, 'password', {}, function (err, ticket) {
+            Oz.ticket.reissue({}, { id: '123', user: 'steve', exp: 1442690715989 }, 'password', {}, (err, ticket) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Parent ticket grant does not match options.grant');
+                done();
+            });
+        });
+
+        it('errors on mismatching grants (different)', (done) => {
+
+            Oz.ticket.reissue({ grant: '234' }, { id: '123', user: 'steve', exp: 1442690715989 }, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Parent ticket grant does not match options.grant');
@@ -388,21 +390,11 @@ describe('Ticket', function () {
         });
     });
 
-    describe('rsvp()', function () {
+    describe('rsvp()', () => {
 
-        it('errors on missing app', function (done) {
+        it('errors on missing app', (done) => {
 
-            Oz.ticket.rsvp(null, { id: '123' }, 'password', {}, function (err, rsvp) {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('Invalid application object');
-                done();
-            });
-        });
-
-        it('errors on invalid app', function (done) {
-
-            Oz.ticket.rsvp({}, { id: '123' }, 'password', {}, function (err, rsvp) {
+            Oz.ticket.rsvp(null, { id: '123' }, 'password', {}, (err, rsvp) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid application object');
@@ -410,9 +402,19 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing grant', function (done) {
+        it('errors on invalid app', (done) => {
 
-            Oz.ticket.rsvp({ id: '123' }, null, 'password', {}, function (err, rsvp) {
+            Oz.ticket.rsvp({}, { id: '123' }, 'password', {}, (err, rsvp) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid application object');
+                done();
+            });
+        });
+
+        it('errors on missing grant', (done) => {
+
+            Oz.ticket.rsvp({ id: '123' }, null, 'password', {}, (err, rsvp) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid grant object');
@@ -420,9 +422,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on invalid grant', function (done) {
+        it('errors on invalid grant', (done) => {
 
-            Oz.ticket.rsvp({ id: '123' }, {}, 'password', {}, function (err, rsvp) {
+            Oz.ticket.rsvp({ id: '123' }, {}, 'password', {}, (err, rsvp) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid grant object');
@@ -430,9 +432,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing password', function (done) {
+        it('errors on missing password', (done) => {
 
-            Oz.ticket.rsvp({ id: '123' }, { id: '123' }, '', {}, function (err, rsvp) {
+            Oz.ticket.rsvp({ id: '123' }, { id: '123' }, '', {}, (err, rsvp) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid encryption password');
@@ -440,9 +442,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing options', function (done) {
+        it('errors on missing options', (done) => {
 
-            Oz.ticket.rsvp({ id: '123' }, { id: '123' }, 'password', null, function (err, rsvp) {
+            Oz.ticket.rsvp({ id: '123' }, { id: '123' }, 'password', null, (err, rsvp) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid options object');
@@ -450,23 +452,23 @@ describe('Ticket', function () {
             });
         });
 
-        it('constructs a valid rsvp', function (done) {
+        it('constructs a valid rsvp', (done) => {
 
-            var encryptionPassword = 'welcome!';
+            const encryptionPassword = 'welcome!';
 
-            var app = {
+            const app = {
                 id: '123'                   // App id
             };
 
-            var grant = {
+            const grant = {
                 id: 's81u29n1812'           // Grant
             };
 
-            Oz.ticket.rsvp(app, grant, encryptionPassword, {}, function (err, envelope) {
+            Oz.ticket.rsvp(app, grant, encryptionPassword, {}, (err, envelope) => {
 
                 expect(err).to.not.exist();
 
-                Oz.ticket.parse(envelope, encryptionPassword, {}, function (err, object) {
+                Oz.ticket.parse(envelope, encryptionPassword, {}, (err, object) => {
 
                     expect(err).to.not.exist();
                     expect(object.app).to.equal(app.id);
@@ -476,22 +478,22 @@ describe('Ticket', function () {
             });
         });
 
-        it('fails to construct a valid rsvp due to bad Iron options', function (done) {
+        it('fails to construct a valid rsvp due to bad Iron options', (done) => {
 
-            var encryptionPassword = 'welcome!';
+            const encryptionPassword = 'welcome!';
 
-            var app = {
+            const app = {
                 id: '123'                   // App id
             };
 
-            var grant = {
+            const grant = {
                 id: 's81u29n1812'           // Grant
             };
 
-            var iron = Hoek.clone(Iron.defaults);
+            const iron = Hoek.clone(Iron.defaults);
             iron.encryption = null;
 
-            Oz.ticket.rsvp(app, grant, encryptionPassword, { iron: iron }, function (err, envelope) {
+            Oz.ticket.rsvp(app, grant, encryptionPassword, { iron: iron }, (err, envelope) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Bad options');
@@ -500,18 +502,18 @@ describe('Ticket', function () {
         });
     });
 
-    describe('generate()', function () {
+    describe('generate()', () => {
 
-        it('errors on random fail', function (done) {
+        it('errors on random fail', (done) => {
 
-            var orig = Cryptiles.randomString;
+            const orig = Cryptiles.randomString;
             Cryptiles.randomString = function (size) {
 
                 Cryptiles.randomString = orig;
                 return new Error('fake');
             };
 
-            Oz.ticket.generate({}, 'password', {}, function (err, ticket) {
+            Oz.ticket.generate({}, 'password', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('fake');
@@ -519,9 +521,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing password', function (done) {
+        it('errors on missing password', (done) => {
 
-            Oz.ticket.generate({}, null, {}, function (err, ticket) {
+            Oz.ticket.generate({}, null, {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Empty password');
@@ -529,30 +531,30 @@ describe('Ticket', function () {
             });
         });
 
-        it('generates a ticket with only public ext', function (done) {
+        it('generates a ticket with only public ext', (done) => {
 
-            var input = {};
-            Oz.ticket.generate(input, 'password', { ext: { public: { x: 1 } } }, function (err, ticket) {
+            const input = {};
+            Oz.ticket.generate(input, 'password', { ext: { public: { x: 1 } } }, (err, ticket) => {
 
                 expect(ticket.ext.x).to.equal(1);
                 done();
             });
         });
 
-        it('generates a ticket with only private ext', function (done) {
+        it('generates a ticket with only private ext', (done) => {
 
-            var input = {};
-            Oz.ticket.generate(input, 'password', { ext: { private: { x: 1 } } }, function (err, ticket) {
+            const input = {};
+            Oz.ticket.generate(input, 'password', { ext: { private: { x: 1 } } }, (err, ticket) => {
 
                 expect(ticket.ext).to.not.exist();
                 done();
             });
         });
 
-        it('overrides hawk options', function (done) {
+        it('overrides hawk options', (done) => {
 
-            var input = {};
-            Oz.ticket.generate(input, 'password', { keyBytes: 10, hmacAlgorithm: 'something' }, function (err, ticket) {
+            const input = {};
+            Oz.ticket.generate(input, 'password', { keyBytes: 10, hmacAlgorithm: 'something' }, (err, ticket) => {
 
                 expect(ticket.key).to.have.length(10);
                 expect(ticket.algorithm).to.equal('something');
@@ -561,32 +563,30 @@ describe('Ticket', function () {
         });
     });
 
-    describe('parse()', function () {
+    describe('parse()', () => {
 
-        it('errors on wrong password', function (done) {
+        it('errors on wrong password', (done) => {
 
-            var encryptionPassword = 'welcome!';
-
-            var app = {
+            const app = {
                 id: '123'
             };
 
-            var grant = {
+            const grant = {
                 id: 's81u29n1812',
                 user: '456',
                 exp: Oz.hawk.utils.now() + 5000,
                 scope: ['a', 'b']
             };
 
-            var options = {
+            const options = {
                 ttl: 10 * 60 * 1000
             };
 
-            Oz.ticket.issue(app, grant, 'password', options, function (err, envelope) {
+            Oz.ticket.issue(app, grant, 'password', options, (err, envelope) => {
 
                 expect(err).to.not.exist();
 
-                Oz.ticket.parse(envelope.id, 'x', {}, function (err, ticket) {
+                Oz.ticket.parse(envelope.id, 'x', {}, (err, ticket) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Bad hmac value');
@@ -595,9 +595,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing password', function (done) {
+        it('errors on missing password', (done) => {
 
-            Oz.ticket.parse('abc', '', {}, function (err, ticket) {
+            Oz.ticket.parse('abc', '', {}, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid encryption password');
@@ -605,9 +605,9 @@ describe('Ticket', function () {
             });
         });
 
-        it('errors on missing options', function (done) {
+        it('errors on missing options', (done) => {
 
-            Oz.ticket.parse('abc', 'password', null, function (err, ticket) {
+            Oz.ticket.parse('abc', 'password', null, (err, ticket) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Invalid options object');

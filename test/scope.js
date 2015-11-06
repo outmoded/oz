@@ -1,108 +1,110 @@
+'use strict';
+
 // Load modules
 
-var Code = require('code');
-var Lab = require('lab');
-var Oz = require('../lib');
+const Code = require('code');
+const Lab = require('lab');
+const Oz = require('../lib');
 
 
 // Declare internals
 
-var internals = {};
+const internals = {};
 
 
 // Test shortcuts
 
-var lab = exports.lab = Lab.script();
-var describe = lab.experiment;
-var it = lab.test;
-var expect = Code.expect;
+const lab = exports.lab = Lab.script();
+const describe = lab.experiment;
+const it = lab.test;
+const expect = Code.expect;
 
 
-describe('Scope', function () {
+describe('Scope', () => {
 
-    describe('validate()', function () {
+    describe('validate()', () => {
 
-        it('should return null for valid scope', function (done) {
+        it('should return null for valid scope', (done) => {
 
-            var scope = ['a', 'b', 'c'];
-            var err = Oz.scope.validate(scope);
+            const scope = ['a', 'b', 'c'];
+            const err = Oz.scope.validate(scope);
             expect(err).to.equal(null);
             done();
         });
 
-        it('should return error when scope is null', function (done) {
+        it('should return error when scope is null', (done) => {
 
-            var err = Oz.scope.validate(null);
+            const err = Oz.scope.validate(null);
             expect(err).to.exist();
             done();
         });
 
-        it('should return error when scope is not an array', function (done) {
+        it('should return error when scope is not an array', (done) => {
 
-            var err = Oz.scope.validate({});
+            const err = Oz.scope.validate({});
             expect(err).to.exist();
             done();
         });
 
-        it('should return error when scope contains non-string values', function (done) {
+        it('should return error when scope contains non-string values', (done) => {
 
-            var scope = ['a', 'b', 1];
-            var err = Oz.scope.validate(scope);
+            const scope = ['a', 'b', 1];
+            const err = Oz.scope.validate(scope);
             expect(err).to.exist();
             done();
         });
 
-        it('should return error when scope contains duplicates', function (done) {
+        it('should return error when scope contains duplicates', (done) => {
 
-            var scope = ['a', 'b', 'b'];
-            var err = Oz.scope.validate(scope);
+            const scope = ['a', 'b', 'b'];
+            const err = Oz.scope.validate(scope);
             expect(err).to.exist();
             done();
         });
 
-        it('should return error when scope contains empty strings', function (done) {
+        it('should return error when scope contains empty strings', (done) => {
 
-            var scope = ['a', 'b', ''];
-            var err = Oz.scope.validate(scope);
+            const scope = ['a', 'b', ''];
+            const err = Oz.scope.validate(scope);
             expect(err).to.exist();
             done();
         });
     });
 
-    describe('isSubset()', function () {
+    describe('isSubset()', () => {
 
-        it('should return true when scope is a subset', function (done) {
+        it('should return true when scope is a subset', (done) => {
 
-            var scope = ['a', 'b', 'c'];
-            var subset = ['a', 'c'];
-            var isSubset = Oz.scope.isSubset(scope, subset);
+            const scope = ['a', 'b', 'c'];
+            const subset = ['a', 'c'];
+            const isSubset = Oz.scope.isSubset(scope, subset);
             expect(isSubset).to.equal(true);
             done();
         });
 
-        it('should return false when scope is not a subset', function (done) {
+        it('should return false when scope is not a subset', (done) => {
 
-            var scope = ['a'];
-            var subset = ['a', 'c'];
-            var isSubset = Oz.scope.isSubset(scope, subset);
+            const scope = ['a'];
+            const subset = ['a', 'c'];
+            const isSubset = Oz.scope.isSubset(scope, subset);
             expect(isSubset).to.equal(false);
             done();
         });
 
-        it('should return false when scope is not a subset but equal length', function (done) {
+        it('should return false when scope is not a subset but equal length', (done) => {
 
-            var scope = ['a', 'b'];
-            var subset = ['a', 'c'];
-            var isSubset = Oz.scope.isSubset(scope, subset);
+            const scope = ['a', 'b'];
+            const subset = ['a', 'c'];
+            const isSubset = Oz.scope.isSubset(scope, subset);
             expect(isSubset).to.equal(false);
             done();
         });
 
-        it('should return false when scope is not a subset due to duplicates', function (done) {
+        it('should return false when scope is not a subset due to duplicates', (done) => {
 
-            var scope = ['a', 'c', 'c', 'd'];
-            var subset = ['a', 'c', 'c'];
-            var isSubset = Oz.scope.isSubset(scope, subset);
+            const scope = ['a', 'c', 'c', 'd'];
+            const subset = ['a', 'c', 'c'];
+            const isSubset = Oz.scope.isSubset(scope, subset);
             expect(isSubset).to.equal(false);
             done();
         });
