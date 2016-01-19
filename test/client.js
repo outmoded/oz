@@ -88,7 +88,7 @@ describe('Client', () => {
 
             it('automatically refreshes ticket', (done) => {
 
-                const mock = new internals.Mock({ ttl: 10 });
+                const mock = new internals.Mock({ ttl: 20 });
                 mock.start((uri) => {
 
                     const connection = new Oz.client.Connection({ uri, credentials: internals.app });
@@ -110,7 +110,7 @@ describe('Client', () => {
 
                                 mock.stop(done);
                             });
-                        }, 11);
+                        }, 30);
                     });
                 });
             });
