@@ -64,6 +64,7 @@ describe('Endpoints', () => {
 
         Oz.endpoints.app(req, null, options, (err, ticket) => {
 
+            expect(err).to.not.exist();
             appTicket = ticket;
             done();
         });
@@ -212,6 +213,8 @@ describe('Endpoints', () => {
             };
 
             Oz.endpoints.app(req, null, options, (err, ticket) => {
+
+                expect(err).to.not.exist();
 
                 req = {
                     method: 'POST',
@@ -887,6 +890,8 @@ describe('Endpoints', () => {
             };
 
             Oz.endpoints.app(req, null, options, (err, applicationTicket) => {
+
+                expect(err).to.not.exist();
 
                 const grant = {
                     id: 'a1b2c3d4e5f6g7h8i9j0',

@@ -6,7 +6,8 @@ Oz is a web authorization protocol based on industry best practices. Oz combines
 secure solution for granting and authenticating third-party access to an API on behalf of a user or
 an application.
 
-Protocol version: **1.0.0**
+Protocol version: **3.0.0** (Same as v1.0.0 but moved the expired ticket indicator from a header
+attribute to the error payload).
 
 [![Build Status](https://secure.travis-ci.org/hueniverse/oz.png)](http://travis-ci.org/hueniverse/oz)
 
@@ -25,6 +26,10 @@ Protocol version: **1.0.0**
     - [`ticket` response](#ticket-response)
   - [`Oz.client`](#ozclient)
     - [`Oz.client.header(uri, method, ticket, [options])`](#ozclientheaderuri-method-ticket-options)
+    - [`new Oz.client.Connection(options)`](#new-ozclientconnectionoptions)
+      - [`connection.request(path, ticket, options, callback)`](#connectionrequestpath-ticket-options-callback)
+      - [`connection.app(path, options, callback)`](#connectionapppath-options-callback)
+      - [`connection.reissue(ticket, callback)`](#connectionreissueticket-callback)
   - [`Oz.endpoints`](#ozendpoints)
     - [Endpoints options](#endpoints-options)
       - [`encryptionPassword`](#encryptionpassword)
@@ -228,6 +233,59 @@ authenticated Oz requests where:
 - `method` - the request HTTP method.
 - `ticket` - the authorization [ticket](#ticket-response).
 - `options` - additional Hawk `Hawk.client.header()` options.
+
+#### `new Oz.client.Connection(options)`
+
+Creates an **oz** client connection manager for easier access to protected resources. The client
+manages the ticket lifecycle and will automatically refresh the ticken when expired. Accepts the
+following options:
+- `endpoints` - an object containing the server protocol endpoints:
+    `app` - the application credentials endpoint path. Defaults to `'/oz/app'`.
+    `reissue` - the ticket reissue endpoint path. Defaults to `'/oz/reissue'`.
+- `uri` - required, the server full root uri without path (e.g. 'https://example.com').
+- `credentials` - required, the application **hawk** credentials.
+
+##### `connection.request(path, ticket, options, callback)`
+
+Requests a protected resource where:
+- `path` - the resource path (e.g. '/resource').
+- `ticket` - the application or user ticket. If the ticket is expired, it will automatically
+  attempt to refresh it.
+- `options` - optional configuration object where:
+    - `method` - the HTTP method (e.g. 'GET'). Defaults to `'GET'`.
+    - `payload` - the request payload object or string. Defaults to no payload.
+- `callback` - the callback method using the signature `function(err, result, code, ticket)` where:
+    - `err` - an error condition.
+    - `result` - the requested resource (parsed to object if JSON).
+    - `code` - the HTTP response code.
+    - `ticket` - the ticket used to make the request (may be different from the ticket provided
+      when the ticket was expired and refreshed).
+
+##### `connection.app(path, options, callback)`
+
+Requests a protected resource using a shared application ticket where:
+- `path` - the resource path (e.g. '/resource').
+- `options` - optional configuration object where:
+    - `method` - the HTTP method (e.g. 'GET'). Defaults to `'GET'`.
+    - `payload` - the request payload object or string. Defaults to no payload.
+- `callback` - the callback method using the signature `function(err, result, code, ticket)` where:
+    - `err` - an error condition.
+    - `result` - the requested resource (parsed to object if JSON).
+    - `code` - the HTTP response code.
+    - `ticket` - the ticket used to make the request (may be different from the ticket provided
+      when the ticket was expired and refreshed).
+
+Once an application ticket is obtained internally using the provided **hawk** credentials in the
+constructor, it will be reused by called to `connection.app()`. If it expires, it will
+automatically refresh and stored for future usage.
+
+##### `connection.reissue(ticket, callback)`
+
+Reissues (refresh) a ticket where:
+- `ticket` - the ticket being reissued.
+- `callback` - the callback method using the signature `function(err, reissued)` where:
+    - `err` - an error condition.
+    - `reissued` - the reissued ticket.
 
 ### `Oz.endpoints`
 

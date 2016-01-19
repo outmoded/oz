@@ -536,6 +536,7 @@ describe('Ticket', () => {
             const input = {};
             Oz.ticket.generate(input, 'password', { ext: { public: { x: 1 } } }, (err, ticket) => {
 
+                expect(err).to.not.exist();
                 expect(ticket.ext.x).to.equal(1);
                 done();
             });
@@ -546,6 +547,7 @@ describe('Ticket', () => {
             const input = {};
             Oz.ticket.generate(input, 'password', { ext: { private: { x: 1 } } }, (err, ticket) => {
 
+                expect(err).to.not.exist();
                 expect(ticket.ext).to.not.exist();
                 done();
             });
@@ -556,6 +558,7 @@ describe('Ticket', () => {
             const input = {};
             Oz.ticket.generate(input, 'password', { keyBytes: 10, hmacAlgorithm: 'something' }, (err, ticket) => {
 
+                expect(err).to.not.exist();
                 expect(ticket.key).to.have.length(10);
                 expect(ticket.algorithm).to.equal('something');
                 done();

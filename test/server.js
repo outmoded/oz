@@ -156,7 +156,7 @@ describe('Server', () => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Expired ticket');
-                    expect(err.output.payload.attributes.reason).to.equal('expired');
+                    expect(err.output.payload.expired).to.be.true();
                     done();
                 });
             });
