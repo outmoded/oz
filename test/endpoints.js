@@ -24,7 +24,7 @@ const expect = Code.expect;
 
 describe('Endpoints', () => {
 
-    const encryptionPassword = 'password';
+    const encryptionPassword = 'a_password_that_is_not_too_short_and_also_not_very_random_but_is_good_enough';
 
     const apps = {
         social: {
@@ -340,7 +340,7 @@ describe('Endpoints', () => {
                 }
             };
 
-            options.encryptionPassword = 'x';
+            options.encryptionPassword = 'a_password_that_is_not_too_short_and_also_not_very_random_but_is_good_enough_x';
             Oz.endpoints.reissue(req, {}, options, (err, delegatedTicket) => {
 
                 expect(err).to.exist();

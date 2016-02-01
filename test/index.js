@@ -24,7 +24,7 @@ describe('Oz', () => {
 
     it('runs a full authorization flow', (done) => {
 
-        const encryptionPassword = 'password';
+        const encryptionPassword = 'a_password_that_is_not_too_short_and_also_not_very_random_but_is_good_enough';
 
         const apps = {
             social: {

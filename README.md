@@ -6,7 +6,7 @@ Oz is a web authorization protocol based on industry best practices. Oz combines
 secure solution for granting and authenticating third-party access to an API on behalf of a user or
 an application.
 
-Protocol version: **3.0.0** (Same as v1.0.0 but moved the expired ticket indicator from a header
+Protocol version: **4.0.0** (Same as v1.0.0 but moved the expired ticket indicator from a header
 attribute to the error payload).
 
 [![Build Status](https://secure.travis-ci.org/hueniverse/oz.png)](http://travis-ci.org/hueniverse/oz)

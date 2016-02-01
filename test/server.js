@@ -33,7 +33,7 @@ describe('Server', () => {
             done();
         });
 
-        const encryptionPassword = 'welcome!';
+        const encryptionPassword = 'a_password_that_is_not_too_short_and_also_not_very_random_but_is_good_enough';
 
         const app = {
             id: '123'
@@ -121,7 +121,7 @@ describe('Server', () => {
                     }
                 };
 
-                Oz.server.authenticate(req, 'x', {}, (err, credentials, artifacts) => {
+                Oz.server.authenticate(req, 'a_password_that_is_not_too_short_and_also_not_very_random_but_is_good_enough_x', {}, (err, credentials, artifacts) => {
 
                     expect(err).to.exist();
                     expect(err.message).to.equal('Bad hmac value');
