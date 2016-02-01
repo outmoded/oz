@@ -341,7 +341,7 @@ Authenticates an application request and if valid, issues an application ticket 
     - `encryptionPassword` - required.
     - `loadAppFunc` - required.
     - `ticket` - optional [ticket options](#ticket-options) used for parsing and issuance.
-    - `hawk` - optional [Hawk](https://github.com/hapijs/hawk) configuration object. Defaults to
+    - `hawk` - optional [Hawk](https://github.com/hueniverse/hawk) configuration object. Defaults to
       the Hawk defaults.
 - `callback` - the method used to return the request result with signature `function(err, ticket)` where:
     - `err` - an error condition.
@@ -361,7 +361,7 @@ Reissue an existing ticket (the ticket used to authenticate the request) where:
     - `loadAppFunc` - required.
     - `loadGrantFunc` - required.
     - `ticket` - optional [ticket options](#ticket-options) used for parsing and issuance.
-    - `hawk` - optional [Hawk](https://github.com/hapijs/hawk) configuration object. Defaults to
+    - `hawk` - optional [Hawk](https://github.com/hueniverse/hawk) configuration object. Defaults to
       the Hawk defaults.
 - `callback` - the method used to return the request result with signature `function(err, ticket)` where:
     - `err` - an error condition.
@@ -379,7 +379,7 @@ Authenticates an application request and if valid, exchanges the provided rsvp w
     - `loadAppFunc` - required.
     - `loadGrantFunc` - required.
     - `ticket` - optional [ticket options](#ticket-options) used for parsing and issuance.
-    - `hawk` - optional [Hawk](https://github.com/hapijs/hawk) configuration object. Defaults to
+    - `hawk` - optional [Hawk](https://github.com/hueniverse/hawk) configuration object. Defaults to
       the Hawk defaults.
 - `callback` - the method used to return the request result with signature `function(err, ticket)` where:
     - `err` - an error condition.
@@ -387,7 +387,7 @@ Authenticates an application request and if valid, exchanges the provided rsvp w
 
 ### `Oz.hawk`
 
-Provides direct access to the underlying [Hawk](https://github.com/hapijs/hawk) module.
+Provides direct access to the underlying [Hawk](https://github.com/hueniverse/hawk) module.
 
 ### `Oz.scope`
 
@@ -414,14 +414,14 @@ Server implementation utilities.
 
 #### `Oz.server.authenticate(req, encryptionPassword, options, callback)`
 
-Authenticates an incoming request using [Hawk](https://github.com/hapijs/hawk) and performs
+Authenticates an incoming request using [Hawk](https://github.com/hueniverse/hawk) and performs
 additional Oz-specific validations where:
 Authenticates an application request and if valid, issues an application ticket where:
 - `req` - the node HTTP server request object.
 - `encryptionPassword` - the ticket [encryption password](#encryptionPassword).
 - `options` - protocol [configuration](#endpoints-options) options where:
     - `ticket` - optional [ticket options](#ticket-options) used for parsing and issuance.
-    - `hawk` - optional [Hawk](https://github.com/hapijs/hawk) configuration object. Defaults to
+    - `hawk` - optional [Hawk](https://github.com/hueniverse/hawk) configuration object. Defaults to
       the Hawk defaults.
 - `callback` - the method used to return the request result with signature
   `function(err, credentials, artifacts)` where:
