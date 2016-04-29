@@ -109,6 +109,26 @@ describe('Scope', () => {
             done();
         });
     });
+
+    describe('isEqual()', () => {
+
+        it('compares scopes', (done) => {
+
+            const scope = ['a', 'b', 'c'];
+            expect(Oz.scope.isEqual(null, null)).to.equal(true);
+            expect(Oz.scope.isEqual(scope, scope)).to.equal(true);
+            expect(Oz.scope.isEqual(null, scope)).to.equal(false);
+            expect(Oz.scope.isEqual(scope, null)).to.equal(false);
+            expect(Oz.scope.isEqual(scope, [])).to.equal(false);
+            expect(Oz.scope.isEqual([], scope)).to.equal(false);
+            expect(Oz.scope.isEqual(scope, ['a', 'b', 'c'])).to.equal(true);
+            expect(Oz.scope.isEqual(scope, ['a', 'c', 'd'])).to.equal(false);
+            expect(Oz.scope.isEqual(['a', 'b', 'c'], scope)).to.equal(true);
+            expect(Oz.scope.isEqual(['a', 'c', 'd'], scope)).to.equal(false);
+
+            done();
+        });
+    });
 });
 
 
