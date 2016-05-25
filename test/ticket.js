@@ -58,19 +58,19 @@ describe('Ticket', () => {
             Oz.ticket.issue(app, grant, password, options, (err, envelope) => {
 
                 expect(err).to.not.exist();
-                expect(envelope.ext).to.deep.equal({ x: 'welcome' });
+                expect(envelope.ext).to.equal({ x: 'welcome' });
                 expect(envelope.exp).to.equal(grant.exp);
-                expect(envelope.scope).to.deep.equal(['a']);
+                expect(envelope.scope).to.equal(['a']);
 
                 Oz.ticket.parse(envelope.id, password, {}, (err, ticket) => {
 
                     expect(err).to.not.exist();
-                    expect(ticket.ext).to.deep.equal(options.ext);
+                    expect(ticket.ext).to.equal(options.ext);
 
                     Oz.ticket.reissue(ticket, grant, password, {}, (err, envelope2) => {
 
                         expect(err).to.not.exist();
-                        expect(envelope.ext).to.deep.equal({ x: 'welcome' });
+                        expect(envelope.ext).to.equal({ x: 'welcome' });
                         expect(envelope2.id).to.not.equal(envelope.id);
                         done();
                     });
