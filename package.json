@@ -1,7 +1,7 @@
 {
   "name": "oz",
   "description": "Web Authorization Protocol",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "repository": "git://github.com/hueniverse/oz",
   "main": "lib/index.js",
   "keywords": [
@@ -19,8 +19,8 @@
     "hawk": "5.x.x",
     "hoek": "4.x.x",
     "iron": "4.x.x",
-    "joi": "8.x.x",
-    "wreck": "7.x.x"
+    "joi": "9.x.x",
+    "wreck": "8.x.x"
   },
   "devDependencies": {
     "code": "3.x.x",
