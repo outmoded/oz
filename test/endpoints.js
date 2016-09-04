@@ -55,7 +55,7 @@ describe('Endpoints', () => {
         };
 
         const options = {
-            encryptionPassword: encryptionPassword,
+            encryptionPassword,
             loadAppFunc: function (id, callback) {
 
                 callback(null, apps[id]);
@@ -84,7 +84,7 @@ describe('Endpoints', () => {
             };
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps.social);
@@ -115,7 +115,7 @@ describe('Endpoints', () => {
             };
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps.network);
@@ -145,7 +145,7 @@ describe('Endpoints', () => {
             };
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps.social);
@@ -171,7 +171,7 @@ describe('Endpoints', () => {
             };
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps.social);
@@ -202,7 +202,7 @@ describe('Endpoints', () => {
             };
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -248,7 +248,7 @@ describe('Endpoints', () => {
             };
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(new Error('not found'));
@@ -275,7 +275,7 @@ describe('Endpoints', () => {
             };
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps.social);
@@ -293,7 +293,7 @@ describe('Endpoints', () => {
         it('fails on invalid reissue (request params)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -324,7 +324,7 @@ describe('Endpoints', () => {
         it('fails on invalid reissue (fails auth)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -352,7 +352,7 @@ describe('Endpoints', () => {
         it('fails on invalid reissue (invalid app)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -384,7 +384,7 @@ describe('Endpoints', () => {
         it('fails on invalid reissue (missing grant)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -407,7 +407,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req1 = {
                     method: 'POST',
@@ -449,7 +449,7 @@ describe('Endpoints', () => {
         it('fails on invalid reissue (grant error)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -472,7 +472,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req1 = {
                     method: 'POST',
@@ -514,7 +514,7 @@ describe('Endpoints', () => {
         it('fails on invalid reissue (grant user mismatch)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -537,7 +537,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req1 = {
                     method: 'POST',
@@ -580,7 +580,7 @@ describe('Endpoints', () => {
         it('fails on invalid reissue (grant missing exp)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -603,7 +603,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req1 = {
                     method: 'POST',
@@ -671,7 +671,7 @@ describe('Endpoints', () => {
             };
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, applications[id]);
@@ -704,7 +704,7 @@ describe('Endpoints', () => {
 
                     // The app exchanges the rsvp for a ticket
 
-                    let payload = { rsvp: rsvp };
+                    let payload = { rsvp };
 
                     req = {
                         method: 'POST',
@@ -773,7 +773,7 @@ describe('Endpoints', () => {
         it('overrides defaults', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -799,7 +799,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',
@@ -821,7 +821,7 @@ describe('Endpoints', () => {
         it('errors on invalid authentication', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -847,7 +847,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',
@@ -879,7 +879,7 @@ describe('Endpoints', () => {
             };
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -909,7 +909,7 @@ describe('Endpoints', () => {
                         callback(null, grant);
                     };
 
-                    const payload = { rsvp: rsvp };
+                    const payload = { rsvp };
 
                     req = {
                         method: 'POST',
@@ -945,7 +945,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (request params)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -991,7 +991,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (invalid auth)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1037,7 +1037,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (user ticket)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1060,7 +1060,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const body = { rsvp: rsvp };
+                const body = { rsvp };
 
                 const req1 = {
                     method: 'POST',
@@ -1097,7 +1097,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (mismatching apps)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1120,7 +1120,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',
@@ -1143,7 +1143,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (expired rsvp)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1166,7 +1166,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',
@@ -1189,7 +1189,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (expired grant)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1212,7 +1212,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',
@@ -1235,7 +1235,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (missing grant)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1261,7 +1261,7 @@ describe('Endpoints', () => {
                     callback(null, null);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',
@@ -1284,7 +1284,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (grant app mismatch)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1311,7 +1311,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',
@@ -1334,7 +1334,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (grant missing exp)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1361,7 +1361,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',
@@ -1384,7 +1384,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (grant error)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1410,7 +1410,7 @@ describe('Endpoints', () => {
                     callback(new Error('boom'));
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',
@@ -1433,7 +1433,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (app error)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1459,7 +1459,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',
@@ -1487,7 +1487,7 @@ describe('Endpoints', () => {
         it('fails on invalid rsvp (invalid app)', (done) => {
 
             const options = {
-                encryptionPassword: encryptionPassword,
+                encryptionPassword,
                 loadAppFunc: function (id, callback) {
 
                     callback(null, apps[id]);
@@ -1510,7 +1510,7 @@ describe('Endpoints', () => {
                     callback(null, grant);
                 };
 
-                const payload = { rsvp: rsvp };
+                const payload = { rsvp };
 
                 const req = {
                     method: 'POST',

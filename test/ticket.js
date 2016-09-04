@@ -483,7 +483,7 @@ describe('Ticket', () => {
             const iron = Hoek.clone(Iron.defaults);
             iron.encryption = null;
 
-            Oz.ticket.rsvp(app, grant, password, { iron: iron }, (err, envelope) => {
+            Oz.ticket.rsvp(app, grant, password, { iron }, (err, envelope) => {
 
                 expect(err).to.exist();
                 expect(err.message).to.equal('Bad options');

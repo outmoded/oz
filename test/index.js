@@ -54,7 +54,7 @@ describe('Oz', () => {
         };
 
         const options = {
-            encryptionPassword: encryptionPassword,
+            encryptionPassword,
             loadAppFunc: function (id, callback) {
 
                 callback(null, apps[id]);
@@ -107,7 +107,7 @@ describe('Oz', () => {
 
                     // The app exchanges the rsvp for a ticket
 
-                    let payload = { rsvp: rsvp };
+                    let payload = { rsvp };
 
                     req = {
                         method: 'POST',
