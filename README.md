@@ -51,6 +51,11 @@ attribute to the error payload).
     - [`ticket.rsvp(app, grant, encryptionPassword, options, callback)`](#ticketrsvpapp-grant-encryptionpassword-options-callback)
     - [`ticket.generate(ticket, encryptionPassword, options, callback)`](#ticketgenerateticket-encryptionpassword-options-callback)
     - [`ticket.parse(id, encryptionPassword, options, callback)`](#ticketparseid-encryptionpassword-options-callback)
+- [Security Considerations](#security-considerations)
+  - [Ticket and Application Hawk Credentials Transmission](#ticket-and-application-hawk-credentials-transmission)
+  - [Plaintext Storage of Ticket and Application Hawk Credentials](#plaintext-storage-of-ticket-and-application-hawk-credentials)
+  - [Entropy of Keys](#entropy-of-keys)
+  - [Application Redirect URI](#application-redirect-uri)
 
 ## Protocol
 
@@ -516,3 +521,63 @@ Decodes a ticket identifier into a ticket response where:
 - `callback` - the callback method using signature `function(err, ticket)` where:
     - `err` - an error condition.
     - `ticket` - a [ticket response](#ticket-response) object.
+
+## Security Considerations
+
+The greatest sources of security risks are usually found not in Oz but in the policies and
+procedures surrounding its use. Implementers are strongly encouraged to assess how this protocol
+addresses their security requirements. This section includes an incomplete list of security
+considerations that must be reviewed and understood before deploying Oz on the server. Most of these
+security considerations are the same as the
+[security considerations for Hawk](https://github.com/hueniverse/hawk#security-considerations), and
+many of the protections provided in Hawk depend on whether or not they are used and how they are
+used.
+
+### Ticket and Application Hawk Credentials Transmission
+
+Oz does not provide any mechanism for obtaining or transmitting the set of shared Hawk credentials
+for the application. Any mechanism the application uses to obtain the Hawk credentials must ensure
+that these transmissions are protected using transport-layer mechanisms such as TLS.
+
+### Plaintext Storage of Ticket and Application Hawk Credentials
+
+The ticket keys and application Hawk keys in Oz function the same way passwords do in traditional
+authentication systems. In order to compute the request MAC, the server must have access to the key
+in plain-text form. This is in contrast, for example, to modern operating systems, which store only
+a one-way hash of user credentials.
+
+If an attacker were to gain access to these keys—or worse, to the server's database of all such
+keys—he or she would be able to perform any action on behalf of the user. Accordingly, it is
+critical that servers protect these keys from unauthorized access.
+
+### Entropy of Keys
+
+Unless a transport-layer security protocol is used, eavesdroppers will have full access to
+authenticated requests and request MAC values, and will thus be able to mount offline brute-force
+attacks to recover the key used. Servers should be careful to assign ticket keys and application
+Hawk keys that are long and random enough to resist such attacks for at least the length of time
+that the ticket credentials or the application Hawk credentials are valid.
+
+For example, if the credentials are valid for two weeks, servers should ensure that it is not
+possible to mount a brute force attack that recovers the key in less than two weeks. Of course,
+servers are urged to err on the side of caution and use the longest key reasonable.
+
+It is equally important that the pseudo-random number generator (PRNG) used to generate these keys
+be of sufficiently high quality. Many PRNG implementations generate number sequences that may appear
+to be random, but nevertheless exhibit patterns or other weaknesses which make cryptanalysis or
+brute force attacks easier. Implementers should be careful to use cryptographically secure PRNGs to
+avoid these problems.
+
+### Application Redirect URI
+
+If the server redirects the RSVP to the application, the server should require a redirect URI for
+the application when the application is registered. This redirect URI would be used by the server to
+redirect back to the application with the RSVP after the user approves the grant. If the application
+supplies the redirect URI to the server and the server uses only this redirect URI to send the RSVP
+to the application, it is possible for an attacker to intercept the request from the application to
+server, change the supplied redirect URI to steal the RSVP, and exchange the RSVP for a user ticket
+if the application ticket credentials or application Hawk credentials were also stolen by the
+attacker. Additionally, the server requiring the registration of a redirect URI of an application
+adds an extra layer of security if the server redirects the RSVP to the application, because it
+limits what the attacker can do if he or she steals the application ticket credentials or
+application Hawk credentials.
