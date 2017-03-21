@@ -3,6 +3,7 @@
 // Load modules
 
 const Code = require('code');
+const Hoek = require('hoek');
 const Iron = require('iron');
 const Lab = require('lab');
 const Oz = require('../lib');
@@ -818,6 +819,39 @@ describe('Endpoints', () => {
             });
         });
 
+        it('issues delegated app tokens', (done) => {
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, apps[id]);
+                }
+            };
+
+            Oz.ticket.delegateRsvp(apps.social, apps.network, null, null, encryptionPassword, {}, (err, rsvp) => {
+
+                expect(err).to.not.exist();
+
+                const payload = { rsvp: rsvp };
+
+                const req = {
+                    method: 'POST',
+                    url: '/oz/rsvp',
+                    headers: {
+                        host: 'example.com',
+                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
+                    }
+                };
+
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
+
+                    expect(err).to.not.exist();
+                    done();
+                });
+            });
+        });
+
         it('errors on invalid authentication', (done) => {
 
             const options = {
@@ -1331,6 +1365,60 @@ describe('Endpoints', () => {
             });
         });
 
+        it('fails on invalid rsvp (grant delegating app mismatch)', (done) => {
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, apps[id]);
+                },
+                ticket: {
+                    iron: Iron.defaults
+                }
+            };
+
+            const grant = {
+                id: 'a1b2c3d4e5f6g7h8i9j0',
+                app: appTicket.app,
+                user: 'john',
+                exp: Oz.hawk.utils.now() + 60000
+            };
+
+            const rsvpOptions = {
+                dlg: apps.network.id
+            };
+
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, rsvpOptions, (err, rsvp) => {
+
+                expect(err).to.not.exist();
+
+                options.loadGrantFunc = function (id, callback) {
+
+                    grant.app = 'xyz';
+                    callback(null, grant);
+                };
+
+                const payload = { rsvp: rsvp };
+
+                const req = {
+                    method: 'POST',
+                    url: '/oz/rsvp',
+                    headers: {
+                        host: 'example.com',
+                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
+                    }
+                };
+
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
+
+                    expect(err).to.exist();
+                    expect(err.message).to.equal('Invalid grant');
+                    done();
+                });
+            });
+        });
+
         it('fails on invalid rsvp (grant missing exp)', (done) => {
 
             const options = {
@@ -1532,6 +1620,844 @@ describe('Endpoints', () => {
                     expect(err.message).to.equal('Invalid application');
                     done();
                 });
+            });
+        });
+    });
+
+    describe('delegate()', () => {
+
+        const grant = {
+            id: 'a1b2c3d4e5f6g7h8i9j0',
+            app: apps.social.id,
+            user: 'john',
+            exp: Oz.hawk.utils.now() + 60000
+        };
+
+        let userTicket = null;
+
+        before((done) => {
+
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+
+                expect(err).to.not.exist();
+
+                const options = {
+                    encryptionPassword: encryptionPassword,
+                    loadAppFunc: function (id, callback) {
+
+                        callback(null, apps[id]);
+                    },
+                    loadGrantFunc: function (id, callback) {
+
+                        callback(null, grant);
+                    }
+                };
+
+                const payload = { rsvp: rsvp };
+
+                const req = {
+                    method: 'POST',
+                    url: '/oz/rsvp',
+                    headers: {
+                        host: 'example.com',
+                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
+                    }
+                };
+
+                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
+
+                    expect(err).to.not.exist();
+                    userTicket = ticket;
+                    done();
+                });
+            });
+        });
+
+        it('overrides defaults', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                },
+                ticket: {
+                    ttl: 10 * 60 * 1000,
+                    iron: Iron.defaults
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.not.exist();
+                done();
+            });
+        });
+
+        it('delegates app tokens', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', appTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.not.exist();
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (missing payload)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = null;
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (invalid request params)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = { delegateTo: null };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                done();
+            });
+        });
+
+        it('fails on invalid authentication', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com'
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                done();
+            });
+        });
+
+        it('fails on expired ticket', (done) => {
+
+            // User ticket
+
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+
+                expect(err).to.not.exist();
+
+                const options = {
+                    encryptionPassword: encryptionPassword,
+                    loadAppFunc: function (id, callback) {
+
+                        callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                    },
+                    loadGrantFunc: function (id, callback) {
+
+                        callback(null, grant);
+                    },
+                    ticket: {
+                        ttl: 5
+                    }
+                };
+
+                const payload1 = { rsvp: rsvp };
+
+                const req1 = {
+                    method: 'POST',
+                    url: '/oz/rsvp',
+                    headers: {
+                        host: 'example.com',
+                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
+                    }
+                };
+
+                Oz.endpoints.rsvp(req1, payload1, options, (err, expiringUserTicket) => {
+
+                    expect(err).to.not.exist();
+
+                    const req2 = {
+                        method: 'POST',
+                        url: '/oz/delegate',
+                        headers: {
+                            host: 'example.com',
+                            authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', expiringUserTicket).field
+                        }
+                    };
+
+                    const payload2 = { delegateTo: apps.network.id };
+
+                    setTimeout(() => {
+
+                        Oz.endpoints.delegate(req2, payload2, options, (err, delegate) => {
+
+                            expect(err).to.exist();
+                            done();
+                        });
+                    }, 10);
+                });
+            });
+        });
+
+        it('fails on invalid delegate (delegated ticket)', (done) => {
+
+            const req1 = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req1, payload, options, (err, delegate1) => {
+
+                expect(err).to.not.exist();
+
+                // App token for delegated app
+
+                const req2 = {
+                    method: 'POST',
+                    url: '/oz/app',
+                    headers: {
+                        host: 'example.com',
+                        authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.network).field
+                    }
+                };
+
+                Oz.endpoints.app(req2, null, options, (err, delegatedAppTicket) => {
+
+                    expect(err).to.not.exist();
+
+                    // User token for delegated app
+
+                    const req3 = {
+                        method: 'POST',
+                        url: '/oz/rsvp',
+                        headers: {
+                            host: 'example.com',
+                            authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', delegatedAppTicket).field
+                        }
+                    };
+
+                    Oz.endpoints.rsvp(req3, delegate1, options, (err, delegatedUserTicket) => {
+
+                        expect(err).to.not.exist();
+
+                        const req4 = {
+                            method: 'POST',
+                            url: '/oz/delegate',
+                            headers: {
+                                host: 'example.com',
+                                authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', delegatedUserTicket).field
+                            }
+                        };
+
+                        payload.delegateTo = 'xyz';
+
+                        Oz.endpoints.delegate(req4, payload, options, (err, delegate2) => {
+
+                            expect(err).to.exist();
+                            expect(err.message).to.equal('Cannot re-delegate');
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        it('fails on invalid delegate (delegate disallowed in ticket)', (done) => {
+
+            // User ticket with disabled delegation
+
+            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+
+                expect(err).to.not.exist();
+
+                const options = {
+                    encryptionPassword: encryptionPassword,
+                    loadAppFunc: function (id, callback) {
+
+                        callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                    },
+                    loadGrantFunc: function (id, callback) {
+
+                        callback(null, grant);
+                    },
+                    ticket: {
+                        delegate: false
+                    }
+                };
+
+                const payload1 = { rsvp: rsvp };
+
+                const req1 = {
+                    method: 'POST',
+                    url: '/oz/rsvp',
+                    headers: {
+                        host: 'example.com',
+                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
+                    }
+                };
+
+                Oz.endpoints.rsvp(req1, payload1, options, (err, ticket) => {
+
+                    expect(err).to.not.exist();
+
+                    const req2 = {
+                        method: 'POST',
+                        url: '/oz/delegate',
+                        headers: {
+                            host: 'example.com',
+                            authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', ticket).field
+                        }
+                    };
+
+                    const payload2 = { delegateTo: apps.network.id };
+
+                    Oz.endpoints.delegate(req2, payload2, options, (err, delegate) => {
+
+                        expect(err).to.exist();
+                        expect(err.message).to.equal('Ticket does not allow delegation');
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('fails on invalid delegate (invalid scope)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = {
+                delegateTo: apps.network.id,
+                scope: ['a','a']
+            };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('scope includes duplicated item');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (missing parent scope)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = {
+                delegateTo: apps.network.id,
+                scope: ['d']
+            };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('New scope is not a subset of the parent ticket scope');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (app load error)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    if (id === apps.social.id) {
+                        callback(new Error('not found'));
+                    }
+                    else {
+                        callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                    }
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('not found');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (invalid app)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    if (id === apps.social.id) {
+                        callback(null, null);
+                    }
+                    else {
+                        callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                    }
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid application');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (missing app delegation rights)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, apps[id]);
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Application has no delegation rights');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (delegated app load error)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    if (id === apps.network.id) {
+                        callback(new Error('not found'));
+                    }
+                    else {
+                        callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                    }
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('not found');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (invalid delegated app)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    if (id === apps.network.id) {
+                        callback(null, null);
+                    }
+                    else {
+                        callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                    }
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, grant);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid application');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (grant load error)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(new Error('what?'));
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('what?');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (invalid grant)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    callback(null, null);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid grant');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (grant app mismatch)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    const grantWithDifferentApp = Hoek.shallow(grant);
+                    grantWithDifferentApp.app = 'xyz';
+                    callback(null, grantWithDifferentApp);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid grant');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (grant user mismatch)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    const grantWithDifferentApp = Hoek.shallow(grant);
+                    grantWithDifferentApp.user = 'steve';
+                    callback(null, grantWithDifferentApp);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid grant');
+                done();
+            });
+        });
+
+        it('fails on invalid delegate (grant missing exp)', (done) => {
+
+            const req = {
+                method: 'POST',
+                url: '/oz/delegate',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/delegate', 'POST', userTicket).field
+                }
+            };
+
+            const options = {
+                encryptionPassword: encryptionPassword,
+                loadAppFunc: function (id, callback) {
+
+                    callback(null, Hoek.merge({ delegate: true }, apps[id]));
+                },
+                loadGrantFunc: function (id, callback) {
+
+                    const grantWithoutExp = Hoek.shallow(grant);
+                    delete grantWithoutExp.exp;
+                    callback(null, grantWithoutExp);
+                }
+            };
+
+            const payload = { delegateTo: apps.network.id };
+
+            Oz.endpoints.delegate(req, payload, options, (err, delegate) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid grant');
+                done();
             });
         });
     });

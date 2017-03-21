@@ -492,6 +492,19 @@ describe('Ticket', () => {
         });
     });
 
+    describe('delegateRsvp()', () => {
+
+        it('errors on invalid delegating app', (done) => {
+
+            Oz.ticket.delegateRsvp({ id: '123' }, null, null, null, password, {}, (err, rsvp) => {
+
+                expect(err).to.exist();
+                expect(err.message).to.equal('Invalid delegating application object');
+                done();
+            });
+        });
+    });
+
     describe('generate()', () => {
 
         it('errors on random fail', (done) => {
@@ -609,5 +622,3 @@ describe('Ticket', () => {
         });
     });
 });
-
-
