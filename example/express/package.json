@@ -1,0 +1,31 @@
+{
+  "name": "oz-express-example",
+  "description": "An working example of an Oz server written in Express",
+  "version": "1.0.0",
+  "repository": "git://github.com/hueniverse/oz",
+  "main": "server.js",
+  "keywords": [
+    "http",
+    "authorization",
+    "oz",
+    "hawk",
+    "express"
+  ],
+  "engines": {
+    "node": ">=4.x.x"
+  },
+  "dependencies": {
+    "body-parser": "1.x.x",
+    "dotenv": "2.x.x",
+    "express": "4.x.x",
+    "morgan": "1.x.x",
+    "oz": "file:../../",
+    "request": "2.x.x"
+  },
+  "license": "BSD-3-Clause",
+  "scripts": {
+    "client": "node client.js",
+    "generate": "node generate_encryption_password.js",
+    "start": "nodemon server.js"
+  }
+}
