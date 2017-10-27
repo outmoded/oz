@@ -1,7 +1,7 @@
 {
   "name": "oz",
   "description": "Web Authorization Protocol",
-  "version": "4.0.5",
+  "version": "5.0.0",
   "repository": "git://github.com/hueniverse/oz",
   "main": "lib/index.js",
   "keywords": [
@@ -11,20 +11,20 @@
     "hawk"
   ],
   "engines": {
-    "node": ">=4.x.x"
+    "node": ">=8.8.0"
   },
   "dependencies": {
-    "boom": "4.x.x",
-    "cryptiles": "3.x.x",
-    "hawk": "6.x.x",
-    "hoek": "4.x.x",
-    "iron": "4.x.x",
-    "joi": "10.x.x",
-    "wreck": "10.x.x"
+    "boom": "6.x.x",
+    "cryptiles": "4.x.x",
+    "hawk": "7.x.x",
+    "hoek": "5.x.x",
+    "iron": "5.x.x",
+    "joi": "13.x.x",
+    "wreck": "14.x.x"
   },
   "devDependencies": {
-    "code": "4.x.x",
-    "lab": "11.x.x"
+    "code": "5.x.x",
+    "lab": "15.x.x"
   },
   "scripts": {
     "test": "lab -a code -t 100 -L",

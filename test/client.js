@@ -3,7 +3,9 @@
 // Load modules
 
 const Http = require('http');
+
 const Code = require('code');
+const Hoek = require('hoek');
 const Iron = require('iron');
 const Lab = require('lab');
 const Oz = require('..');
@@ -17,9 +19,7 @@ const internals = {};
 
 // Test shortcuts
 
-const lab = exports.lab = Lab.script();
-const describe = lab.experiment;
-const it = lab.test;
+const { describe, it } = exports.lab = Lab.script();
 const expect = Code.expect;
 
 
@@ -27,7 +27,7 @@ describe('Client', () => {
 
     describe('header()', () => {
 
-        it('', (done) => {
+        it('generates header', () => {
 
             const app = {
                 id: 'social',
@@ -36,335 +36,277 @@ describe('Client', () => {
                 algorithm: 'sha256'
             };
 
-            const header = Oz.client.header('http://example.com/oz/app', 'POST', app, {}).field;
+            const { header } = Oz.client.header('http://example.com/oz/app', 'POST', app, {});
             expect(header).to.exist();
-            done();
         });
     });
 
     describe('Connection', () => {
 
-        it('obtains an application ticket and requests resource', (done) => {
+        it('obtains an application ticket and requests resource', async () => {
 
             const mock = new internals.Mock();
-            mock.start((uri) => {
+            const uri = await mock.start();
 
-                const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-                connection.app('/', {}, (err, result1, code1, ticket1) => {
+            const connection = new Oz.client.Connection({ uri, credentials: internals.app });
+            const { result: result1, code: code1, ticket: ticket1 } = await connection.app('/');
+            expect(result1).to.equal('GET /');
+            expect(code1).to.equal(200);
+            expect(ticket1).to.equal(connection._appTicket);
 
-                    expect(err).to.not.exist();
-                    expect(result1).to.equal('GET /');
-                    expect(code1).to.equal(200);
-                    expect(ticket1).to.equal(connection._appTicket);
+            const { result: result2, code: code2, ticket: ticket2 } = await connection.request('/resource', ticket1);
+            expect(result2).to.equal('GET /resource');
+            expect(code2).to.equal(200);
+            expect(ticket2).to.equal(ticket1);
 
-                    connection.request('/resource', ticket1, {}, (err, result2, code2, ticket2) => {
+            const ticket3 = await connection.reissue(ticket2);
+            expect(ticket3).to.not.equal(ticket2);
 
-                        expect(err).to.not.exist();
-                        expect(result2).to.equal('GET /resource');
-                        expect(code2).to.equal(200);
-                        expect(ticket2).to.equal(ticket1);
+            const { result: result4, code: code4, ticket: ticket4 } = await connection.request('/resource', ticket3);
+            expect(result4).to.equal('GET /resource');
+            expect(code4).to.equal(200);
+            expect(ticket4).to.equal(ticket3);
 
-                        connection.reissue(ticket2, (err, ticket3) => {
+            await mock.stop();
+        });
 
-                            expect(err).to.not.exist();
-                            expect(ticket3).to.not.equal(ticket2);
+        it('errors on payload read fail', async () => {
 
-                            connection.request('/resource', ticket3, {}, (err, result4, code4, ticket4) => {
+            const mock = new internals.Mock();
+            const uri = await mock.start();
 
-                                expect(err).to.not.exist();
-                                expect(result4).to.equal('GET /resource');
-                                expect(code4).to.equal(200);
-                                expect(ticket4).to.equal(ticket3);
+            const connection = new Oz.client.Connection({ uri, credentials: internals.app });
 
-                                mock.stop(done);
-                            });
-                        });
-                    });
-                });
-            });
+            let count = 0;
+            const orig = Wreck.read;
+            Wreck.read = function (...args) {
+
+                if (++count === 1) {
+                    return orig.apply(Wreck, args);
+                }
+
+                Wreck.read = orig;
+                return Promise.reject(new Error('fail read'));
+            };
+
+            await expect(connection._requestAppTicket()).to.reject();
+            await mock.stop();
+        });
+
+        it('errors on invalid app response', async () => {
+
+            const mock = new internals.Mock({ failApp: true });
+            const uri = await mock.start();
+
+            const connection = new Oz.client.Connection({ uri, credentials: internals.app });
+            await expect(connection.app('/')).to.not.reject();
+            await mock.stop();
         });
 
         describe('request()', () => {
 
-            it('automatically refreshes ticket', (done) => {
+            it('automatically refreshes ticket', async () => {
 
                 const mock = new internals.Mock({ ttl: 20 });
-                mock.start((uri) => {
+                const uri = await mock.start();
 
-                    const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-                    connection.app('/', {}, (err, result1, code1, ticket1) => {
+                const connection = new Oz.client.Connection({ uri, credentials: internals.app });
+                const { result: result1, code: code1, ticket: ticket1 } = await connection.app('/');
+                expect(result1).to.equal('GET /');
+                expect(code1).to.equal(200);
+                expect(ticket1).to.equal(connection._appTicket);
 
-                        expect(err).to.not.exist();
-                        expect(result1).to.equal('GET /');
-                        expect(code1).to.equal(200);
-                        expect(ticket1).to.equal(connection._appTicket);
+                await Hoek.wait(30);
 
-                        setTimeout(() => {
+                const { result: result2, code: code2, ticket: ticket2 } = await connection.request('/resource', ticket1, { method: 'POST' });
+                expect(result2).to.equal('POST /resource');
+                expect(code2).to.equal(200);
+                expect(ticket2).to.not.equal(ticket1);
 
-                            connection.request('/resource', ticket1, { method: 'POST' }, (err, result2, code2, ticket2) => {
-
-                                expect(err).to.not.exist();
-                                expect(result2).to.equal('POST /resource');
-                                expect(code2).to.equal(200);
-                                expect(ticket2).to.not.equal(ticket1);
-
-                                mock.stop(done);
-                            });
-                        }, 30);
-                    });
-                });
+                await mock.stop();
             });
 
-            it('errors on socket fail', { parallel: false }, (done) => {
+            it('errors on socket fail', async () => {
 
                 const mock = new internals.Mock();
-                mock.start((uri) => {
+                const uri = await mock.start();
 
-                    const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-                    connection.app('/', {}, (err, result1, code1, ticket1) => {
+                const connection = new Oz.client.Connection({ uri, credentials: internals.app });
+                const { result: result1, code: code1, ticket: ticket1 } = await connection.app('/');
+                expect(result1).to.equal('GET /');
+                expect(code1).to.equal(200);
+                expect(ticket1).to.equal(connection._appTicket);
 
-                        expect(err).to.not.exist();
-                        expect(result1).to.equal('GET /');
-                        expect(code1).to.equal(200);
-                        expect(ticket1).to.equal(connection._appTicket);
+                const orig = Wreck.request;
+                Wreck.request = function () {
 
-                        const orig = Wreck.request;
-                        Wreck.request = function (method, path, options, callback) {
+                    Wreck.request = orig;
+                    return Promise.reject(new Error('bad socket'));
+                };
 
-                            Wreck.request = orig;
-                            return callback(new Error('bad socket'));
-                        };
-
-                        connection.request('/resource', ticket1, {}, (err, result2, code2, ticket2) => {
-
-                            expect(err).to.exist();
-                            mock.stop(done);
-                        });
-                    });
-                });
+                await expect(connection.request('/resource', ticket1)).to.reject();
+                await mock.stop();
             });
 
-            it('errors on reissue fail', { parallel: false }, (done) => {
+            it('errors on reissue fail', async () => {
 
                 const mock = new internals.Mock({ ttl: 10 });
-                mock.start((uri) => {
+                const uri = await mock.start();
 
-                    const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-                    connection.app('/', {}, (err, result1, code1, ticket1) => {
+                const connection = new Oz.client.Connection({ uri, credentials: internals.app });
+                const { result: result1, code: code1, ticket: ticket1 } = await connection.app('/');
+                expect(result1).to.equal('GET /');
+                expect(code1).to.equal(200);
+                expect(ticket1).to.equal(connection._appTicket);
 
-                        expect(err).to.not.exist();
-                        expect(result1).to.equal('GET /');
-                        expect(code1).to.equal(200);
-                        expect(ticket1).to.equal(connection._appTicket);
+                await Hoek.wait(11);        // Expire ticket
 
-                        setTimeout(() => {
+                let count = 0;
+                const orig = Wreck.request;
+                Wreck.request = function (...args) {
 
-                            let count = 0;
-                            const orig = Wreck.request;
-                            Wreck.request = function (method, path, options, callback) {
+                    if (++count === 1) {
+                        return orig.apply(Wreck, args);
+                    }
 
-                                if (++count === 1) {
-                                    return orig.apply(Wreck, arguments);
-                                }
+                    Wreck.request = orig;
+                    return Promise.reject(new Error('bad socket'));
+                };
 
-                                Wreck.request = orig;
-                                return callback(new Error('bad socket'));
-                            };
-
-                            connection.request('/resource', ticket1, { method: 'POST' }, (err, result2, code2, ticket2) => {
-
-                                expect(err).to.not.exist();
-                                mock.stop(done);
-                            });
-                        }, 11);
-                    });
-                });
+                await expect(connection.request('/resource', ticket1, { method: 'POST' })).to.reject();
+                await mock.stop();
             });
 
-            it('does not reissue a 401 without payload', (done) => {
+            it('does not reissue a 401 without payload', async () => {
 
                 const mock = new internals.Mock({ empty401: true });
-                mock.start((uri) => {
+                const uri = await mock.start();
 
-                    const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-                    connection.app('/', {}, (err, result, code, ticket) => {
+                const connection = new Oz.client.Connection({ uri, credentials: internals.app });
+                const { result, code } = await connection.app('/');
+                expect(code).to.equal(401);
+                expect(result).to.equal('');
 
-                        expect(err).to.not.exist();
-                        expect(result).to.equal('');
-                        expect(code).to.equal(401);
-
-                        mock.stop(done);
-                    });
-                });
+                await mock.stop();
             });
         });
 
         describe('app()', () => {
 
-            it('reuses application ticket', (done) => {
+            it('reuses application ticket', async () => {
 
                 const mock = new internals.Mock();
-                mock.start((uri) => {
+                const uri = await mock.start();
 
-                    const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-                    connection.app('/', {}, (err, result1, code1, ticket1) => {
+                const connection = new Oz.client.Connection({ uri, credentials: internals.app });
+                const { result: result1, code: code1, ticket: ticket1 } = await connection.app('/');
+                expect(result1).to.equal('GET /');
+                expect(code1).to.equal(200);
+                expect(ticket1).to.equal(connection._appTicket);
 
-                        expect(err).to.not.exist();
-                        expect(result1).to.equal('GET /');
-                        expect(code1).to.equal(200);
-                        expect(ticket1).to.equal(connection._appTicket);
+                const { result: result2, code: code2, ticket: ticket2 } = await connection.app('/resource');
+                expect(result2).to.equal('GET /resource');
+                expect(code2).to.equal(200);
+                expect(ticket2).to.equal(ticket1);
 
-                        connection.app('/resource', {}, (err, result2, code2, ticket2) => {
-
-                            expect(err).to.not.exist();
-                            expect(result2).to.equal('GET /resource');
-                            expect(code2).to.equal(200);
-                            expect(ticket2).to.equal(ticket1);
-
-                            mock.stop(done);
-                        });
-                    });
-                });
+                await mock.stop();
             });
 
-            it('handles app ticket request errors', { parallel: false }, (done) => {
+            it('handles app ticket request errors', async () => {
 
                 const mock = new internals.Mock();
-                mock.start((uri) => {
+                const uri = await mock.start();
 
-                    const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-                    connection._requestAppTicket = (callback) => callback(new Error('failed'));
-                    connection.app('/', {}, (err, result1, code1, ticket1) => {
-
-                        expect(err).to.exist();
-                        mock.stop(done);
-                    });
-                });
+                const connection = new Oz.client.Connection({ uri, credentials: internals.app });
+                connection._requestAppTicket = (callback) => callback(new Error('failed'));
+                await expect(connection.app('/')).to.reject();
+                await mock.stop();
             });
         });
 
         describe('reissue()', () => {
 
-            it('errors on non 200 reissue response', (done) => {
+            it('errors on non 200 reissue response', async () => {
 
                 const mock = new internals.Mock({ failRefresh: true });
-                mock.start((uri) => {
+                const uri = await mock.start();
 
-                    const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-                    connection.app('/', {}, (err, result1, code1, ticket1) => {
+                const connection = new Oz.client.Connection({ uri, credentials: internals.app });
+                const { result, code, ticket } = await connection.app('/');
+                expect(result).to.equal('GET /');
+                expect(code).to.equal(200);
+                expect(ticket).to.equal(connection._appTicket);
 
-                        expect(err).to.not.exist();
-                        expect(result1).to.equal('GET /');
-                        expect(code1).to.equal(200);
-                        expect(ticket1).to.equal(connection._appTicket);
-
-                        connection.reissue(ticket1, (err, ticket2) => {
-
-                            expect(err).to.exist();
-                            mock.stop(done);
-                        });
-                    });
-                });
+                await expect(connection.reissue(ticket)).to.reject();
+                await mock.stop();
             });
         });
 
         describe('_request()', () => {
 
-            it('errors on payload read fail', { parallel: false }, (done) => {
+            it('errors on payload read fail', async () => {
 
                 const mock = new internals.Mock();
-                mock.start((uri) => {
+                const uri = await mock.start();
 
-                    const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-                    connection.app('/', {}, (err, result1, code1, ticket1) => {
+                const connection = new Oz.client.Connection({ uri, credentials: internals.app });
+                const { ticket: ticket1 } = await connection.app('/');
 
-                        expect(err).to.not.exist();
+                let count = 0;
+                const orig = Wreck.read;
+                Wreck.read = function (...args) {
 
-                        let count = 0;
-                        const orig = Wreck.read;
-                        Wreck.read = function (req, options, callback) {
+                    if (++count === 1) {
+                        return orig.apply(Wreck, args);
+                    }
 
-                            if (++count === 1) {
-                                return orig.apply(Wreck, arguments);
-                            }
+                    Wreck.read = orig;
+                    return Promise.reject(new Error('fail read'));
+                };
 
-                            Wreck.read = orig;
-                            return callback(new Error('fail read'));
-                        };
-
-                        connection._request('GET', '/', null, ticket1, (err, result2, code2) => {
-
-                            expect(err).to.exist();
-                            mock.stop(done);
-                        });
-                    });
-                });
+                await expect(connection._request('GET', '/', null, ticket1)).to.reject();
+                await mock.stop();
             });
         });
 
         describe('_requestAppTicket()', () => {
 
-            it('errors on socket fail', { parallel: false }, (done) => {
+            it('errors on socket fail', async () => {
 
                 const mock = new internals.Mock();
-                mock.start((uri) => {
-
-                    const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-
-                    const orig = Wreck.request;
-                    Wreck.request = function (method, path, options, callback) {
-
-                        Wreck.request = orig;
-                        return callback(new Error('bad socket'));
-                    };
-
-                    connection._requestAppTicket((err, ticket) => {
-
-                        expect(err).to.exist();
-                        mock.stop(done);
-                    });
-                });
-            });
-        });
-
-        it('errors on payload read fail', { parallel: false }, (done) => {
-
-            const mock = new internals.Mock();
-            mock.start((uri) => {
+                const uri = await mock.start();
 
                 const connection = new Oz.client.Connection({ uri, credentials: internals.app });
 
-                let count = 0;
-                const orig = Wreck.read;
-                Wreck.read = function (req, options, callback) {
+                const orig = Wreck.request;
+                Wreck.request = function () {
 
-                    if (++count === 1) {
-                        return orig.apply(Wreck, arguments);
-                    }
-
-                    Wreck.read = orig;
-                    return callback(new Error('fail read'));
+                    Wreck.request = orig;
+                    return Promise.reject(new Error('bad socket'));
                 };
 
-                connection._requestAppTicket((err, ticket) => {
-
-                    expect(err).to.exist();
-                    mock.stop(done);
-                });
+                await expect(connection._requestAppTicket()).to.reject();
+                await mock.stop();
             });
-        });
 
-        it('errors on invalid app response', (done) => {
+            it('errors on redirection', async () => {
 
-            const mock = new internals.Mock({ failApp: true });
-            mock.start((uri) => {
+                const mock = new internals.Mock();
+                const uri = await mock.start();
 
                 const connection = new Oz.client.Connection({ uri, credentials: internals.app });
-                connection.app('/', {}, (err, result1, code1, ticket1) => {
 
-                    expect(err).to.exist();
-                    mock.stop(done);
-                });
+                const orig = Wreck.request;
+                Wreck.request = async (...args) => {
+
+                    Wreck.request = orig;
+                    const response = await Wreck.request(...args);
+                    response.statusCode = 300;
+                    return response;
+                };
+
+                await expect(connection._requestAppTicket()).to.reject();
+                await mock.stop();
             });
         });
     });
@@ -381,15 +323,13 @@ internals.app = {
 
 internals.Mock = class {
 
-    constructor(options) {
-
-        options = options || {};
+    constructor(options = {}) {
 
         const settings = {
             encryptionPassword: 'passwordpasswordpasswordpasswordpasswordpasswordpasswordpasswordpasswordpassword',
-            loadAppFunc: function (id, callback) {
+            loadAppFunc: function (id) {
 
-                callback(null, internals.app);
+                return internals.app;
             },
             ticket: {
                 ttl: options.ttl || 10 * 60 * 1000,
@@ -398,7 +338,7 @@ internals.Mock = class {
             hawk: {}
         };
 
-        this.listener = Http.createServer((req, res) => {
+        this.listener = Http.createServer(async (req, res) => {
 
             const reply = (err, payload, code) => {
 
@@ -411,47 +351,56 @@ internals.Mock = class {
                 res.end(body);
             };
 
-            Wreck.read(req, {}, (err, result) => {
+            const result = await Wreck.read(req);
 
-                expect(err).to.not.exist();
-
-                if (req.url === '/oz/app') {
-                    return Oz.endpoints.app(req, result, settings, (err, payload) => {
-
-                        return reply(err, payload, options.failApp ? 400 : 200);
-                    });
+            if (req.url === '/oz/app') {
+                try {
+                    const payload = await Oz.endpoints.app(req, result, settings);
+                    return reply(null, payload, 200);
                 }
-
-                if (req.url === '/oz/reissue') {
-                    return Oz.endpoints.reissue(req, result, settings, (err, payload) => {
-
-                        return reply(err, payload, options.failRefresh ? 400 : 200);
-                    });
+                catch (err) {
+                    return reply(err, null, options.failApp ? 400 : 200);
                 }
+            }
 
-                Oz.server.authenticate(req, settings.encryptionPassword, settings, (err, credentials, artifacts) => {
+            if (req.url === '/oz/reissue') {
+                try {
+                    const payload = await Oz.endpoints.reissue(req, result, settings);
+                    return reply(null, payload, options.failRefresh ? 400 : 200);
+                }
+                catch (err) {
+                    return reply(err, null, 400);
+                }
+            }
 
-                    if (options.empty401) {
-                        return reply(null, '', 401);
-                    }
+            if (options.empty401) {
+                return reply(null, '', 401);
+            }
 
-                    return reply(err, req.method + ' ' + req.url);
-                });
-            });
+            try {
+                await Oz.server.authenticate(req, settings.encryptionPassword, settings);
+                return reply(null, req.method + ' ' + req.url);
+            }
+            catch (err) {
+                return reply(err);
+            }
         });
     };
 
-    start(callback) {
+    start() {
 
-        this.listener.listen(0, 'localhost', () => {
+        return new Promise((resolve) => {
 
-            const address = this.listener.address();
-            return callback('http://localhost:' + address.port);
+            this.listener.listen(0, 'localhost', () => {
+
+                const address = this.listener.address();
+                return resolve('http://localhost:' + address.port);
+            });
         });
     }
 
-    stop(callback) {
+    stop() {
 
-        return this.listener.close(callback);
+        return new Promise((resolve) => this.listener.close(resolve));
     }
 };

@@ -14,15 +14,13 @@ const internals = {};
 
 // Test shortcuts
 
-const lab = exports.lab = Lab.script();
-const describe = lab.experiment;
-const it = lab.test;
+const { describe, it } = exports.lab = Lab.script();
 const expect = Code.expect;
 
 
 describe('Oz', () => {
 
-    it('runs a full authorization flow', (done) => {
+    it('runs a full authorization flow', async () => {
 
         const encryptionPassword = 'a_password_that_is_not_too_short_and_also_not_very_random_but_is_good_enough';
 
@@ -49,120 +47,98 @@ describe('Oz', () => {
             url: '/oz/app',
             headers: {
                 host: 'example.com',
-                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
+                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).header
             }
         };
 
         const options = {
             encryptionPassword,
-            loadAppFunc: function (id, callback) {
+            loadAppFunc: (id) => apps[id]
+        };
 
-                callback(null, apps[id]);
+        const appTicket = await Oz.endpoints.app(req, null, options);
+
+        // The app refreshes its own ticket
+
+        req = {
+            method: 'POST',
+            url: '/oz/reissue',
+            headers: {
+                host: 'example.com',
+                authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).header
             }
         };
 
-        Oz.endpoints.app(req, null, options, (err, appTicket) => {
+        const reAppTicket = await Oz.endpoints.reissue(req, {}, options);
 
-            expect(err).to.not.exist();
+        // The user is redirected to the server, logs in, and grant app access, resulting in an rsvp
 
-            // The app refreshes its own ticket
+        const grant = {
+            id: 'a1b2c3d4e5f6g7h8i9j0',
+            app: reAppTicket.app,
+            user: 'john',
+            exp: Oz.hawk.utils.now() + 60000
+        };
 
-            req = {
-                method: 'POST',
-                url: '/oz/reissue',
-                headers: {
-                    host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).field
-                }
+        const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
+
+        // After granting app access, the user returns to the app with the rsvp
+
+        options.loadGrantFunc = (id) => {
+
+            const ext = {
+                public: 'everybody knows',
+                private: 'the the dice are loaded'
             };
 
-            Oz.endpoints.reissue(req, {}, options, (err, reAppTicket) => {
+            return { grant, ext };
+        };
 
-                expect(err).to.not.exist();
+        // The app exchanges the rsvp for a ticket
 
-                // The user is redirected to the server, logs in, and grant app access, resulting in an rsvp
+        let payload = { rsvp };
 
-                const grant = {
-                    id: 'a1b2c3d4e5f6g7h8i9j0',
-                    app: reAppTicket.app,
-                    user: 'john',
-                    exp: Oz.hawk.utils.now() + 60000
-                };
+        req = {
+            method: 'POST',
+            url: '/oz/rsvp',
+            headers: {
+                host: 'example.com',
+                authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', reAppTicket).header
+            }
+        };
 
-                Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+        const ticket = await Oz.endpoints.rsvp(req, payload, options);
 
-                    expect(err).to.not.exist();
+        // The app reissues the ticket with delegation to another app
 
-                    // After granting app access, the user returns to the app with the rsvp
+        payload = {
+            issueTo: apps.network.id,
+            scope: ['a']
+        };
 
-                    options.loadGrantFunc = function (id, callback) {
+        req = {
+            method: 'POST',
+            url: '/oz/reissue',
+            headers: {
+                host: 'example.com',
+                authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).header
+            }
+        };
 
-                        const ext = {
-                            public: 'everybody knows',
-                            private: 'the the dice are loaded'
-                        };
+        const delegatedTicket = await Oz.endpoints.reissue(req, payload, options);
 
-                        callback(null, grant, ext);
-                    };
+        // The other app reissues their ticket
 
-                    // The app exchanges the rsvp for a ticket
+        req = {
+            method: 'POST',
+            url: '/oz/reissue',
+            headers: {
+                host: 'example.com',
+                authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', delegatedTicket).header
+            }
+        };
 
-                    let payload = { rsvp };
-
-                    req = {
-                        method: 'POST',
-                        url: '/oz/rsvp',
-                        headers: {
-                            host: 'example.com',
-                            authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', reAppTicket).field
-                        }
-                    };
-
-                    Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                        expect(err).to.not.exist();
-
-                        // The app reissues the ticket with delegation to another app
-
-                        payload = {
-                            issueTo: apps.network.id,
-                            scope: ['a']
-                        };
-
-                        req = {
-                            method: 'POST',
-                            url: '/oz/reissue',
-                            headers: {
-                                host: 'example.com',
-                                authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).field
-                            }
-                        };
-
-                        Oz.endpoints.reissue(req, payload, options, (err, delegatedTicket) => {
-
-                            expect(err).to.not.exist();
-
-                            // The other app reissues their ticket
-
-                            req = {
-                                method: 'POST',
-                                url: '/oz/reissue',
-                                headers: {
-                                    host: 'example.com',
-                                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', delegatedTicket).field
-                                }
-                            };
-
-                            Oz.endpoints.reissue(req, {}, options, (err, reissuedDelegatedTicket) => {
-
-                                expect(err).to.not.exist();
-                                done();
-                            });
-                        });
-                    });
-                });
-            });
-        });
+        await expect(Oz.endpoints.reissue(req, {}, options)).to.not.reject();
     });
 });
 

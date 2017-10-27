@@ -24,95 +24,79 @@ describe('Scope', () => {
 
     describe('validate()', () => {
 
-        it('should return null for valid scope', (done) => {
+        it('should return null for valid scope', () => {
 
             const scope = ['a', 'b', 'c'];
-            const err = Oz.scope.validate(scope);
-            expect(err).to.equal(null);
-            done();
+            expect(() => Oz.scope.validate(scope)).to.not.throw();
         });
 
-        it('should return error when scope is null', (done) => {
+        it('should return error when scope is null', () => {
 
-            const err = Oz.scope.validate(null);
-            expect(err).to.exist();
-            done();
+            expect(() => Oz.scope.validate(null)).to.throw();
         });
 
-        it('should return error when scope is not an array', (done) => {
+        it('should return error when scope is not an array', () => {
 
-            const err = Oz.scope.validate({});
-            expect(err).to.exist();
-            done();
+            expect(() => Oz.scope.validate({})).to.throw();
         });
 
-        it('should return error when scope contains non-string values', (done) => {
+        it('should return error when scope contains non-string values', () => {
 
             const scope = ['a', 'b', 1];
-            const err = Oz.scope.validate(scope);
-            expect(err).to.exist();
-            done();
+            expect(() => Oz.scope.validate(scope)).to.throw();
         });
 
-        it('should return error when scope contains duplicates', (done) => {
+        it('should return error when scope contains duplicates', () => {
 
             const scope = ['a', 'b', 'b'];
-            const err = Oz.scope.validate(scope);
-            expect(err).to.exist();
-            done();
+            expect(() => Oz.scope.validate(scope)).to.throw();
         });
 
-        it('should return error when scope contains empty strings', (done) => {
+        it('should return error when scope contains empty strings', () => {
 
             const scope = ['a', 'b', ''];
-            const err = Oz.scope.validate(scope);
-            expect(err).to.exist();
-            done();
+            expect(() => Oz.scope.validate(scope)).to.throw();
         });
     });
 
     describe('isSubset()', () => {
 
-        it('should return true when scope is a subset', (done) => {
+        it('should return true when scope is a subset', () => {
 
             const scope = ['a', 'b', 'c'];
             const subset = ['a', 'c'];
             const isSubset = Oz.scope.isSubset(scope, subset);
             expect(isSubset).to.equal(true);
-            done();
         });
 
-        it('should return false when scope is not a subset', (done) => {
+        it('should return false when scope is not a subset', () => {
 
             const scope = ['a'];
             const subset = ['a', 'c'];
             const isSubset = Oz.scope.isSubset(scope, subset);
             expect(isSubset).to.equal(false);
-            done();
         });
 
-        it('should return false when scope is not a subset but equal length', (done) => {
+        it('should return false when scope is not a subset but equal length', () => {
 
             const scope = ['a', 'b'];
             const subset = ['a', 'c'];
             const isSubset = Oz.scope.isSubset(scope, subset);
             expect(isSubset).to.equal(false);
-            done();
         });
 
-        it('should return false when scope is not a subset due to duplicates', (done) => {
+        it('should return false when scope is not a subset due to duplicates', () => {
 
             const scope = ['a', 'c', 'c', 'd'];
             const subset = ['a', 'c', 'c'];
             const isSubset = Oz.scope.isSubset(scope, subset);
             expect(isSubset).to.equal(false);
-            done();
         });
     });
 
     describe('isEqual()', () => {
 
-        it('compares scopes', (done) => {
+        it('compares scopes', () => {
 
             const scope = ['a', 'b', 'c'];
             expect(Oz.scope.isEqual(null, null)).to.equal(true);
@@ -125,8 +109,6 @@ describe('Scope', () => {
             expect(Oz.scope.isEqual(scope, ['a', 'c', 'd'])).to.equal(false);
             expect(Oz.scope.isEqual(['a', 'b', 'c'], scope)).to.equal(true);
             expect(Oz.scope.isEqual(['a', 'c', 'd'], scope)).to.equal(false);
-
-            done();
         });
     });
 });

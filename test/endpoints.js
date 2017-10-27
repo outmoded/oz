@@ -3,6 +3,7 @@
 // Load modules
 
 const Code = require('code');
+const Hoek = require('hoek');
 const Iron = require('iron');
 const Lab = require('lab');
 const Oz = require('../lib');
@@ -15,10 +16,7 @@ const internals = {};
 
 // Test shortcuts
 
-const lab = exports.lab = Lab.script();
-const describe = lab.experiment;
-const it = lab.test;
-const before = lab.before;
+const { describe, it, before } = exports.lab = Lab.script();
 const expect = Code.expect;
 
 
@@ -43,52 +41,42 @@ describe('Endpoints', () => {
 
     let appTicket = null;
 
-    before((done) => {
+    before(async () => {
 
         const req = {
             method: 'POST',
             url: '/oz/app',
             headers: {
                 host: 'example.com',
-                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
+                authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).header
             }
         };
 
         const options = {
             encryptionPassword,
-            loadAppFunc: function (id, callback) {
-
-                callback(null, apps[id]);
-            }
+            loadAppFunc: (id) => apps[id]
         };
 
-        Oz.endpoints.app(req, null, options, (err, ticket) => {
-
-            expect(err).to.not.exist();
-            appTicket = ticket;
-            done();
-        });
+        const ticket = await Oz.endpoints.app(req, null, options);
+        appTicket = ticket;
     });
 
     describe('app()', () => {
 
-        it('overrides defaults', (done) => {
+        it('overrides defaults', async () => {
 
             const req = {
                 method: 'POST',
                 url: '/oz/app',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
+                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).header
                 }
             };
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps.social);
-                },
+                loadAppFunc: () => apps.social,
                 ticket: {
                     ttl: 10 * 60 * 1000,
                     iron: Iron.defaults
@@ -96,86 +84,64 @@ describe('Endpoints', () => {
                 hawk: {}
             };
 
-            Oz.endpoints.app(req, null, options, (err, ticket) => {
-
-                expect(err).to.not.exist();
-                done();
-            });
+            await expect(Oz.endpoints.app(req, null, options)).to.not.reject();
         });
 
-        it('fails on invalid app request (bad credentials)', (done) => {
+        it('fails on invalid app request (bad credentials)', async () => {
 
             const req = {
                 method: 'POST',
                 url: '/oz/app',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
+                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).header
                 }
             };
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps.network);
-                }
+                loadAppFunc: () => apps.network
             };
 
-            Oz.endpoints.app(req, null, options, (err, ticket) => {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('Bad mac');
-                done();
-            });
+            await expect(Oz.endpoints.app(req, null, options)).to.reject('Bad mac');
         });
     });
 
     describe('reissue()', () => {
 
-        it('allows null payload', (done) => {
+        it('allows null payload', async () => {
 
             const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).field
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).header
                 }
             };
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps.social);
-                }
+                loadAppFunc: () => apps.social
             };
 
-            Oz.endpoints.reissue(req, null, options, (err, ticket) => {
-
-                expect(err).to.not.exist();
-                done();
-            });
+            await expect(Oz.endpoints.reissue(req, null, options)).to.not.reject();
         });
 
-        it('overrides defaults', (done) => {
+        it('overrides defaults', async () => {
 
             const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).field
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).header
                 }
             };
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps.social);
-                },
+                loadAppFunc: () => apps.social,
                 ticket: {
                     ttl: 10 * 60 * 1000,
                     iron: Iron.defaults
@@ -183,121 +149,89 @@ describe('Endpoints', () => {
                 hawk: {}
             };
 
-            Oz.endpoints.reissue(req, {}, options, (err, ticket) => {
-
-                expect(err).to.not.exist();
-                done();
-            });
+            await expect(Oz.endpoints.reissue(req, null, options)).to.not.reject();
         });
 
-        it('reissues expired ticket', (done) => {
+        it('reissues expired ticket', async () => {
 
             let req = {
                 method: 'POST',
                 url: '/oz/app',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
+                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).header
                 }
             };
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                },
+                loadAppFunc: (id) => apps[id],
                 ticket: {
                     ttl: 5
                 }
             };
 
-            Oz.endpoints.app(req, null, options, (err, ticket) => {
+            const ticket = await Oz.endpoints.app(req, null, options);
 
-                expect(err).to.not.exist();
+            req = {
+                method: 'POST',
+                url: '/oz/reissue',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).header
+                }
+            };
 
-                req = {
-                    method: 'POST',
-                    url: '/oz/reissue',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).field
-                    }
-                };
-
-                setTimeout(() => {
-
-                    Oz.endpoints.reissue(req, {}, options, (err, reissued) => {
-
-                        expect(err).to.not.exist();
-                        done();
-                    });
-                }, 10);
-            });
+            await Hoek.wait(10);
+            await expect(Oz.endpoints.reissue(req, {}, options)).to.not.reject();
         });
 
-        it('fails on app load error', (done) => {
+        it('fails on app load error', async () => {
 
             const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).field
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).header
                 }
             };
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
+                loadAppFunc: () => {
 
-                    callback(new Error('not found'));
+                    throw new Error('not found');
                 }
             };
 
-            Oz.endpoints.reissue(req, {}, options, (err, ticket) => {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('not found');
-                done();
-            });
+            await expect(Oz.endpoints.reissue(req, {}, options)).to.reject('not found');
         });
 
-        it('fails on missing app delegation rights', (done) => {
+        it('fails on missing app delegation rights', async () => {
 
             const req = {
                 method: 'POST',
                 url: '/oz/reissue',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).field
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).header
                 }
             };
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps.social);
-                }
+                loadAppFunc: () => apps.social
             };
 
-            Oz.endpoints.reissue(req, { issueTo: apps.network.id }, options, (err, ticket) => {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('Application has no delegation rights');
-                done();
-            });
+            await expect(Oz.endpoints.reissue(req, { issueTo: apps.network.id }, options)).to.reject('Application has no delegation rights');
         });
 
-        it('fails on invalid reissue (request params)', (done) => {
+        it('fails on invalid reissue (request params)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const payload = {
@@ -309,26 +243,18 @@ describe('Endpoints', () => {
                 url: '/oz/reissue',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).field
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).header
                 }
             };
 
-            Oz.endpoints.reissue(req, payload, options, (err, delegatedTicket) => {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('child "issueTo" fails because ["issueTo" must be a string]');
-                done();
-            });
+            await expect(Oz.endpoints.reissue(req, payload, options)).to.reject('Invalid request payload: issueTo must be a string');
         });
 
-        it('fails on invalid reissue (fails auth)', (done) => {
+        it('fails on invalid reissue (fails auth)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const req = {
@@ -336,27 +262,19 @@ describe('Endpoints', () => {
                 url: '/oz/reissue',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).field
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).header
                 }
             };
 
             options.encryptionPassword = 'a_password_that_is_not_too_short_and_also_not_very_random_but_is_good_enough_x';
-            Oz.endpoints.reissue(req, {}, options, (err, delegatedTicket) => {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('Bad hmac value');
-                done();
-            });
+            await expect(Oz.endpoints.reissue(req, {}, options)).to.reject('Bad hmac value');
         });
 
-        it('fails on invalid reissue (invalid app)', (done) => {
+        it('fails on invalid reissue (invalid app)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const req = {
@@ -364,31 +282,19 @@ describe('Endpoints', () => {
                 url: '/oz/reissue',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).field
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', appTicket).header
                 }
             };
 
-            options.loadAppFunc = function (id, callback) {
-
-                callback(null, null);
-            };
-
-            Oz.endpoints.reissue(req, {}, options, (err, delegatedTicket) => {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('Invalid application');
-                done();
-            });
+            options.loadAppFunc = () => null;
+            await expect(Oz.endpoints.reissue(req, {}, options)).to.reject('Invalid application');
         });
 
-        it('fails on invalid reissue (missing grant)', (done) => {
+        it('fails on invalid reissue (missing grant)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const grant = {
@@ -398,62 +304,42 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req1 = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
+            const ticket = await Oz.endpoints.rsvp(req1, payload, options);
 
-                const req1 = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
+            const req2 = {
+                method: 'POST',
+                url: '/oz/reissue',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).header
+                }
+            };
 
-                Oz.endpoints.rsvp(req1, payload, options, (err, ticket) => {
+            options.loadGrantFunc = () => ({ grant: null });
 
-                    expect(err).to.not.exist();
-
-                    const req2 = {
-                        method: 'POST',
-                        url: '/oz/reissue',
-                        headers: {
-                            host: 'example.com',
-                            authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).field
-                        }
-                    };
-
-                    options.loadGrantFunc = function (id, callback) {
-
-                        callback(null, null);
-                    };
-
-                    Oz.endpoints.reissue(req2, {}, options, (err, delegatedTicket) => {
-
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('Invalid grant');
-                        done();
-                    });
-                });
-            });
+            await expect(Oz.endpoints.reissue(req2, {}, options)).to.reject('Invalid grant');
         });
 
-        it('fails on invalid reissue (grant error)', (done) => {
+        it('fails on invalid reissue (grant error)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const grant = {
@@ -463,62 +349,45 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req1 = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
+            const ticket = await Oz.endpoints.rsvp(req1, payload, options);
 
-                const req1 = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
+            const req2 = {
+                method: 'POST',
+                url: '/oz/reissue',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).header
+                }
+            };
 
-                Oz.endpoints.rsvp(req1, payload, options, (err, ticket) => {
+            options.loadGrantFunc = () => {
 
-                    expect(err).to.not.exist();
+                throw new Error('what?');
+            };
 
-                    const req2 = {
-                        method: 'POST',
-                        url: '/oz/reissue',
-                        headers: {
-                            host: 'example.com',
-                            authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).field
-                        }
-                    };
-
-                    options.loadGrantFunc = function (id, callback) {
-
-                        callback(new Error('what?'));
-                    };
-
-                    Oz.endpoints.reissue(req2, {}, options, (err, delegatedTicket) => {
-
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('what?');
-                        done();
-                    });
-                });
-            });
+            await expect(Oz.endpoints.reissue(req2, {}, options)).to.reject('what?');
         });
 
-        it('fails on invalid reissue (grant user mismatch)', (done) => {
+        it('fails on invalid reissue (grant user mismatch)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const grant = {
@@ -528,63 +397,46 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req1 = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
+            const ticket = await Oz.endpoints.rsvp(req1, payload, options);
 
-                const req1 = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
+            const req2 = {
+                method: 'POST',
+                url: '/oz/reissue',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).header
+                }
+            };
 
-                Oz.endpoints.rsvp(req1, payload, options, (err, ticket) => {
+            options.loadGrantFunc = () => {
 
-                    expect(err).to.not.exist();
+                grant.user = 'steve';
+                return { grant };
+            };
 
-                    const req2 = {
-                        method: 'POST',
-                        url: '/oz/reissue',
-                        headers: {
-                            host: 'example.com',
-                            authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).field
-                        }
-                    };
-
-                    options.loadGrantFunc = function (id, callback) {
-
-                        grant.user = 'steve';
-                        callback(null, grant);
-                    };
-
-                    Oz.endpoints.reissue(req2, {}, options, (err, delegatedTicket) => {
-
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('Invalid grant');
-                        done();
-                    });
-                });
-            });
+            await expect(Oz.endpoints.reissue(req2, {}, options)).to.reject('Invalid grant');
         });
 
-        it('fails on invalid reissue (grant missing exp)', (done) => {
+        it('fails on invalid reissue (grant missing exp)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const grant = {
@@ -594,56 +446,42 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req1 = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
+            const ticket = await Oz.endpoints.rsvp(req1, payload, options);
 
-                const req1 = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
+            const req2 = {
+                method: 'POST',
+                url: '/oz/reissue',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).header
+                }
+            };
 
-                Oz.endpoints.rsvp(req1, payload, options, (err, ticket) => {
+            options.loadGrantFunc = () => {
 
-                    expect(err).to.not.exist();
+                delete grant.exp;
+                return { grant };
+            };
 
-                    const req2 = {
-                        method: 'POST',
-                        url: '/oz/reissue',
-                        headers: {
-                            host: 'example.com',
-                            authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).field
-                        }
-                    };
-
-                    options.loadGrantFunc = function (id, callback) {
-
-                        delete grant.exp;
-                        callback(null, grant);
-                    };
-
-                    Oz.endpoints.reissue(req2, {}, options, (err, delegatedTicket) => {
-
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('Invalid grant');
-                        done();
-                    });
-                });
-            });
+            await expect(Oz.endpoints.reissue(req2, {}, options)).to.reject('Invalid grant');
         });
 
-        it('fails on invalid reissue (grant app does not match app or dlg)', (done) => {
+        it('fails on invalid reissue (grant app does not match app or dlg)', async () => {
 
             const applications = {
                 social: {
@@ -666,118 +504,92 @@ describe('Endpoints', () => {
                 url: '/oz/app',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', applications.social).field
+                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', applications.social).header
                 }
             };
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
+                loadAppFunc: (id) => applications[id]
+            };
 
-                    callback(null, applications[id]);
+            const applicationTicket = await Oz.endpoints.app(req, null, options);
+
+            // The user is redirected to the server, logs in, and grant app access, resulting in an rsvp
+
+            const grant = {
+                id: 'a1b2c3d4e5f6g7h8i9j0',
+                app: applicationTicket.app,
+                user: 'john',
+                exp: Oz.hawk.utils.now() + 60000
+            };
+
+            const rsvp = await Oz.ticket.rsvp(applications.social, grant, encryptionPassword);
+
+            // After granting app access, the user returns to the app with the rsvp
+
+            options.loadGrantFunc = () => ({ grant });
+
+            // The app exchanges the rsvp for a ticket
+
+            let payload = { rsvp };
+
+            req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', applicationTicket).header
                 }
             };
 
-            Oz.endpoints.app(req, null, options, (err, applicationTicket) => {
+            const ticket = await Oz.endpoints.rsvp(req, payload, options);
 
-                expect(err).to.not.exist();
+            // The app reissues the ticket with delegation to another app
 
-                // The user is redirected to the server, logs in, and grant app access, resulting in an rsvp
+            payload = {
+                issueTo: applications.network.id
+            };
 
-                const grant = {
-                    id: 'a1b2c3d4e5f6g7h8i9j0',
-                    app: applicationTicket.app,
-                    user: 'john',
-                    exp: Oz.hawk.utils.now() + 60000
-                };
+            req = {
+                method: 'POST',
+                url: '/oz/reissue',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).header
+                }
+            };
 
-                Oz.ticket.rsvp(applications.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const delegatedTicket = await Oz.endpoints.reissue(req, payload, options);
 
-                    expect(err).to.not.exist();
+            // The other app reissues their ticket
 
-                    // After granting app access, the user returns to the app with the rsvp
+            req = {
+                method: 'POST',
+                url: '/oz/reissue',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', delegatedTicket).header
+                }
+            };
 
-                    options.loadGrantFunc = function (id, callback) {
+            options.loadGrantFunc = (id) => {
 
-                        callback(null, grant);
-                    };
+                grant.app = 'xyz';
+                return { grant };
+            };
 
-                    // The app exchanges the rsvp for a ticket
-
-                    let payload = { rsvp };
-
-                    req = {
-                        method: 'POST',
-                        url: '/oz/rsvp',
-                        headers: {
-                            host: 'example.com',
-                            authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', applicationTicket).field
-                        }
-                    };
-
-                    Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                        expect(err).to.not.exist();
-
-                        // The app reissues the ticket with delegation to another app
-
-                        payload = {
-                            issueTo: applications.network.id
-                        };
-
-                        req = {
-                            method: 'POST',
-                            url: '/oz/reissue',
-                            headers: {
-                                host: 'example.com',
-                                authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', ticket).field
-                            }
-                        };
-
-                        Oz.endpoints.reissue(req, payload, options, (err, delegatedTicket) => {
-
-                            expect(err).to.not.exist();
-
-                            // The other app reissues their ticket
-
-                            req = {
-                                method: 'POST',
-                                url: '/oz/reissue',
-                                headers: {
-                                    host: 'example.com',
-                                    authorization: Oz.client.header('http://example.com/oz/reissue', 'POST', delegatedTicket).field
-                                }
-                            };
-
-                            options.loadGrantFunc = function (id, callback) {
-
-                                grant.app = 'xyz';
-                                callback(null, grant);
-                            };
-
-                            Oz.endpoints.reissue(req, {}, options, (err, reissuedDelegatedTicket) => {
-
-                                expect(err).to.exist();
-                                expect(err.message).to.equal('Invalid grant');
-                                done();
-                            });
-                        });
-                    });
-                });
-            });
+            await expect(Oz.endpoints.reissue(req, {}, options)).to.reject('Invalid grant');
         });
     });
 
     describe('rsvp()', () => {
 
-        it('overrides defaults', (done) => {
+        it('overrides defaults', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                },
+                loadAppFunc: (id) => apps[id],
                 ticket: {
                     iron: Iron.defaults
                 }
@@ -790,42 +602,29 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
-
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.not.exist();
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.not.reject();
         });
 
-        it('errors on invalid authentication', (done) => {
+        it('errors on invalid authentication', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                },
+                loadAppFunc: (id) => apps[id],
                 ticket: {
                     iron: Iron.defaults
                 }
@@ -838,34 +637,24 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com'
+                }
+            };
 
-                const payload = { rsvp };
-
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com'
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject();
         });
 
-        it('errors on expired ticket', (done) => {
+        it('errors on expired ticket', async () => {
 
             // App ticket
 
@@ -874,82 +663,56 @@ describe('Endpoints', () => {
                 url: '/oz/app',
                 headers: {
                     host: 'example.com',
-                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).field
+                    authorization: Oz.client.header('http://example.com/oz/app', 'POST', apps.social).header
                 }
             };
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                },
+                loadAppFunc: (id) => apps[id],
                 ticket: {
                     ttl: 5
                 }
             };
 
-            Oz.endpoints.app(req, null, options, (err, applicationTicket) => {
+            const applicationTicket = await Oz.endpoints.app(req, null, options);
 
-                expect(err).to.not.exist();
+            const grant = {
+                id: 'a1b2c3d4e5f6g7h8i9j0',
+                app: applicationTicket.app,
+                user: 'john',
+                exp: Oz.hawk.utils.now() + 60000
+            };
 
-                const grant = {
-                    id: 'a1b2c3d4e5f6g7h8i9j0',
-                    app: applicationTicket.app,
-                    user: 'john',
-                    exp: Oz.hawk.utils.now() + 60000
-                };
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            options.loadGrantFunc = () => ({ grant });
 
-                    expect(err).to.not.exist();
+            const payload = { rsvp };
 
-                    options.loadGrantFunc = function (id, callback) {
+            req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', applicationTicket).header
+                }
+            };
 
-                        callback(null, grant);
-                    };
-
-                    const payload = { rsvp };
-
-                    req = {
-                        method: 'POST',
-                        url: '/oz/rsvp',
-                        headers: {
-                            host: 'example.com',
-                            authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', applicationTicket).field
-                        }
-                    };
-
-                    setTimeout(() => {
-
-                        Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                            expect(err).to.exist();
-                            done();
-                        });
-                    }, 10);
-                });
-            });
+            await Hoek.wait(10);
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Expired ticket');
         });
 
-        it('errors on missing payload', (done) => {
+        it('errors on missing payload', async () => {
 
-            Oz.endpoints.rsvp({}, null, {}, (err, ticket) => {
-
-                expect(err).to.exist();
-                expect(err.message).to.equal('Missing required payload');
-                done();
-            });
+            await expect(Oz.endpoints.rsvp({}, null, {})).to.reject('Missing required payload');
         });
 
-        it('fails on invalid rsvp (request params)', (done) => {
+        it('fails on invalid rsvp (request params)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const grant = {
@@ -959,43 +722,29 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp: '' };
 
-                    callback(null, grant);
-                };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp: '' };
-
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('child "rsvp" fails because ["rsvp" is not allowed to be empty]');
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Invalid request payload: rsvp is not allowed to be empty');
         });
 
-        it('fails on invalid rsvp (invalid auth)', (done) => {
+        it('fails on invalid rsvp (invalid auth)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const grant = {
@@ -1005,43 +754,29 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp: 'abc' };
 
-                    callback(null, grant);
-                };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp: 'abc' };
-
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('Incorrect number of sealed components');
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Incorrect number of sealed components');
         });
 
-        it('fails on invalid rsvp (user ticket)', (done) => {
+        it('fails on invalid rsvp (user ticket)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const grant = {
@@ -1051,57 +786,40 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const body = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req1 = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const body = { rsvp };
+            const ticket1 = await Oz.endpoints.rsvp(req1, body, options);
 
-                const req1 = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
+            const req2 = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', ticket1).header
+                }
+            };
 
-                Oz.endpoints.rsvp(req1, body, options, (err, ticket1) => {
-
-                    expect(err).to.not.exist();
-
-                    const req2 = {
-                        method: 'POST',
-                        url: '/oz/rsvp',
-                        headers: {
-                            host: 'example.com',
-                            authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', ticket1).field
-                        }
-                    };
-
-                    Oz.endpoints.rsvp(req2, body, options, (err, ticket2) => {
-
-                        expect(err).to.exist();
-                        expect(err.message).to.equal('User ticket cannot be used on an application endpoint');
-                        done();
-                    });
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req2, body, options)).to.reject('User ticket cannot be used on an application endpoint');
         });
 
-        it('fails on invalid rsvp (mismatching apps)', (done) => {
+        it('fails on invalid rsvp (mismatching apps)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const grant = {
@@ -1111,43 +829,29 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.network, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.network, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
-
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('Mismatching ticket and rsvp apps');
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Mismatching ticket and rsvp apps');
         });
 
-        it('fails on invalid rsvp (expired rsvp)', (done) => {
+        it('fails on invalid rsvp (expired rsvp)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const grant = {
@@ -1157,43 +861,30 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, { ttl: 1 }, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword, { ttl: 1 });
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
-
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('Expired rsvp');
-                    done();
-                });
-            });
+            await Hoek.wait(10);
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Expired rsvp');
         });
 
-        it('fails on invalid rsvp (expired grant)', (done) => {
+        it('fails on invalid rsvp (expired grant)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                }
+                loadAppFunc: (id) => apps[id]
             };
 
             const grant = {
@@ -1203,43 +894,29 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() - 1000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
-
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('Invalid grant');
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Invalid grant');
         });
 
-        it('fails on invalid rsvp (missing grant)', (done) => {
+        it('fails on invalid rsvp (missing grant envelope)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                },
+                loadAppFunc: (id) => apps[id],
                 ticket: {
                     iron: Iron.defaults
                 }
@@ -1252,43 +929,29 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => null;
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, null);
-                };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
-
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('Invalid grant');
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Invalid grant');
         });
 
-        it('fails on invalid rsvp (grant app mismatch)', (done) => {
+        it('fails on invalid rsvp (missing grant)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                },
+                loadAppFunc: (id) => apps[id],
                 ticket: {
                     iron: Iron.defaults
                 }
@@ -1301,44 +964,29 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant: null });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    grant.app = apps.network.id;
-                    callback(null, grant);
-                };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
-
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('Invalid grant');
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Invalid grant');
         });
 
-        it('fails on invalid rsvp (grant missing exp)', (done) => {
+        it('fails on invalid rsvp (grant app mismatch)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                },
+                loadAppFunc: (id) => apps[id],
                 ticket: {
                     iron: Iron.defaults
                 }
@@ -1351,44 +999,33 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = (id) => {
 
-                options.loadGrantFunc = function (id, callback) {
+                grant.app = apps.network.id;
+                return { grant };
+            };
 
-                    delete grant.exp;
-                    callback(null, grant);
-                };
+            const payload = { rsvp };
 
-                const payload = { rsvp };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('Invalid grant');
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Invalid grant');
         });
 
-        it('fails on invalid rsvp (grant error)', (done) => {
+        it('fails on invalid rsvp (grant missing exp)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                },
+                loadAppFunc: (id) => apps[id],
                 ticket: {
                     iron: Iron.defaults
                 }
@@ -1401,43 +1038,33 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = (id) => {
 
-                options.loadGrantFunc = function (id, callback) {
+                delete grant.exp;
+                return { grant };
+            };
 
-                    callback(new Error('boom'));
-                };
+            const payload = { rsvp };
 
-                const payload = { rsvp };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('boom');
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Invalid grant');
         });
 
-        it('fails on invalid rsvp (app error)', (done) => {
+        it('fails on invalid rsvp (grant error)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
-                },
+                loadAppFunc: (id) => apps[id],
                 ticket: {
                     iron: Iron.defaults
                 }
@@ -1450,47 +1077,34 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = (id) => {
 
-                options.loadGrantFunc = function (id, callback) {
+                throw new Error('boom');
+            };
 
-                    callback(null, grant);
-                };
+            const payload = { rsvp };
 
-                const payload = { rsvp };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
-
-                options.loadAppFunc = function (id, callback) {
-
-                    return callback(new Error('nope'));
-                };
-
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
-
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('nope');
-                    done();
-                });
-            });
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('boom');
         });
 
-        it('fails on invalid rsvp (invalid app)', (done) => {
+        it('fails on invalid rsvp (app error)', async () => {
 
             const options = {
                 encryptionPassword,
-                loadAppFunc: function (id, callback) {
-
-                    callback(null, apps[id]);
+                loadAppFunc: (id) => apps[id],
+                ticket: {
+                    iron: Iron.defaults
                 }
             };
 
@@ -1501,38 +1115,61 @@ describe('Endpoints', () => {
                 exp: Oz.hawk.utils.now() + 60000
             };
 
-            Oz.ticket.rsvp(apps.social, grant, encryptionPassword, {}, (err, rsvp) => {
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
 
-                expect(err).to.not.exist();
+            options.loadGrantFunc = () => ({ grant });
 
-                options.loadGrantFunc = function (id, callback) {
+            const payload = { rsvp };
 
-                    callback(null, grant);
-                };
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
 
-                const payload = { rsvp };
+            options.loadAppFunc = () => {
 
-                const req = {
-                    method: 'POST',
-                    url: '/oz/rsvp',
-                    headers: {
-                        host: 'example.com',
-                        authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).field
-                    }
-                };
+                throw new Error('nope');
+            };
 
-                options.loadAppFunc = function (id, callback) {
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('nope');
+        });
 
-                    callback(null, null);
-                };
+        it('fails on invalid rsvp (invalid app)', async () => {
 
-                Oz.endpoints.rsvp(req, payload, options, (err, ticket) => {
+            const options = {
+                encryptionPassword,
+                loadAppFunc: (id) => apps[id]
+            };
 
-                    expect(err).to.exist();
-                    expect(err.message).to.equal('Invalid application');
-                    done();
-                });
-            });
+            const grant = {
+                id: 'a1b2c3d4e5f6g7h8i9j0',
+                app: appTicket.app,
+                user: 'john',
+                exp: Oz.hawk.utils.now() + 60000
+            };
+
+            const rsvp = await Oz.ticket.rsvp(apps.social, grant, encryptionPassword);
+
+            options.loadGrantFunc = () => ({ grant });
+
+            const payload = { rsvp };
+
+            const req = {
+                method: 'POST',
+                url: '/oz/rsvp',
+                headers: {
+                    host: 'example.com',
+                    authorization: Oz.client.header('http://example.com/oz/rsvp', 'POST', appTicket).header
+                }
+            };
+
+            options.loadAppFunc = () => null;
+
+            await expect(Oz.endpoints.rsvp(req, payload, options)).to.reject('Invalid application');
         });
     });
 });

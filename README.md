@@ -6,7 +6,7 @@ Oz is a web authorization protocol based on industry best practices. Oz combines
 secure solution for granting and authenticating third-party access to an API on behalf of a user or
 an application.
 
-Protocol version: **4.0.0** (Same as v1.0.0 but moved the expired ticket indicator from a header
+Protocol version: **5.0.0** (Same as v1.0.0 but moved the expired ticket indicator from a header
 attribute to the error payload).
 
 [![Build Status](https://secure.travis-ci.org/hueniverse/oz.png)](http://travis-ci.org/hueniverse/oz)
@@ -27,30 +27,30 @@ attribute to the error payload).
   - [`Oz.client`](#ozclient)
     - [`Oz.client.header(uri, method, ticket, [options])`](#ozclientheaderuri-method-ticket-options)
     - [`new Oz.client.Connection(options)`](#new-ozclientconnectionoptions)
-      - [`connection.request(path, ticket, options, callback)`](#connectionrequestpath-ticket-options-callback)
-      - [`connection.app(path, options, callback)`](#connectionapppath-options-callback)
-      - [`connection.reissue(ticket, callback)`](#connectionreissueticket-callback)
+      - [`await connection.request(path, ticket, options)`](#await-connectionrequestpath-ticket-options)
+      - [`await connection.app(path, options)`](#await-connectionapppath-options)
+      - [`await connection.reissue(ticket)`](#await-connectionreissueticket)
   - [`Oz.endpoints`](#ozendpoints)
     - [Endpoints options](#endpoints-options)
       - [`encryptionPassword`](#encryptionpassword)
       - [`loadAppFunc`](#loadappfunc)
       - [`loadGrantFunc`](#loadgrantfunc)
-    - [`endpoints.app(req, payload, options, callback)`](#endpointsappreq-payload-options-callback)
-    - [`endpoints.reissue(req, payload, options, callback)`](#endpointsreissuereq-payload-options-callback)
-    - [`endpoints.rsvp(req, payload, options, callback)`](#endpointsrsvpreq-payload-options-callback)
+    - [`await endpoints.app(req, payload, options)`](#await-endpointsappreq-payload-options)
+    - [`await endpoints.reissue(req, payload, options)`](#await-endpointsreissuereq-payload-options)
+    - [`await endpoints.rsvp(req, payload, options)`](#await-endpointsrsvpreq-payload-options)
   - [`Oz.hawk`](#ozhawk)
   - [`Oz.scope`](#ozscope)
     - [`Oz.scope.validate(scope)`](#ozscopevalidatescope)
     - [`Oz.scope.isSubset(scope, subset)`](#ozscopeissubsetscope-subset)
   - [`Oz.server`](#ozserver)
-    - [`Oz.server.authenticate(req, encryptionPassword, options, callback)`](#ozserverauthenticatereq-encryptionpassword-options-callback)
+    - [`await Oz.server.authenticate(req, encryptionPassword, options)`](#await-ozserverauthenticatereq-encryptionpassword-options)
   - [`Oz.ticket`](#ozticket)
     - [Ticket options](#ticket-options)
-    - [`ticket.issue(app, grant, encryptionPassword, options, callback)`](#ticketissueapp-grant-encryptionpassword-options-callback)
-    - [`ticket.reissue(parentTicket, grant, encryptionPassword, options, callback)`](#ticketreissueparentticket-grant-encryptionpassword-options-callback)
-    - [`ticket.rsvp(app, grant, encryptionPassword, options, callback)`](#ticketrsvpapp-grant-encryptionpassword-options-callback)
-    - [`ticket.generate(ticket, encryptionPassword, options, callback)`](#ticketgenerateticket-encryptionpassword-options-callback)
-    - [`ticket.parse(id, encryptionPassword, options, callback)`](#ticketparseid-encryptionpassword-options-callback)
+    - [`await ticket.issue(app, grant, encryptionPassword, options)`](#await-ticketissueapp-grant-encryptionpassword-options)
+    - [`await ticket.reissue(parentTicket, grant, encryptionPassword, options)`](#await-ticketreissueparentticket-grant-encryptionpassword-options)
+    - [`await ticket.rsvp(app, grant, encryptionPassword, options)`](#await-ticketrsvpapp-grant-encryptionpassword-options)
+    - [`await ticket.generate(ticket, encryptionPassword, options)`](#await-ticketgenerateticket-encryptionpassword-options)
+    - [`await ticket.parse(id, encryptionPassword, options)`](#await-ticketparseid-encryptionpassword-options)
 - [Security Considerations](#security-considerations)
   - [Ticket and Application Hawk Credentials Transmission](#ticket-and-application-hawk-credentials-transmission)
   - [Plaintext Storage of Ticket and Application Hawk Credentials](#plaintext-storage-of-ticket-and-application-hawk-credentials)
@@ -182,7 +182,7 @@ encoded string containing the application identifier, the grant identifier, and 
 
 The Oz public API is offered as a full toolkit to implement the protocol as-is or to modify it to
 fit custom security needs. Most implementations will only need to use the [endpoints functions](#ozendpoints)
-methods and the [`ticket.rsvp()`](#ticketrsvpapp-grant-encryptionPassword-options-callback) method
+methods and the [`ticket.rsvp()`](#await-ticketrsvpapp-grant-encryptionPassword-options) method
 directly.
 
 ### Shared objects
@@ -250,7 +250,7 @@ following options:
 - `uri` - required, the server full root uri without path (e.g. 'https://example.com').
 - `credentials` - required, the application **hawk** credentials.
 
-##### `connection.request(path, ticket, options, callback)`
+##### `await connection.request(path, ticket, options)`
 
 Requests a protected resource where:
 - `path` - the resource path (e.g. '/resource').
@@ -259,38 +259,39 @@ Requests a protected resource where:
 - `options` - optional configuration object where:
     - `method` - the HTTP method (e.g. 'GET'). Defaults to `'GET'`.
     - `payload` - the request payload object or string. Defaults to no payload.
-- `callback` - the callback method using the signature `function(err, result, code, ticket)` where:
-    - `err` - an error condition.
+
+Return value: `{ result, code, ticket }` where:
     - `result` - the requested resource (parsed to object if JSON).
     - `code` - the HTTP response code.
     - `ticket` - the ticket used to make the request (may be different from the ticket provided
       when the ticket was expired and refreshed).
+    - throws request errors.
 
-##### `connection.app(path, options, callback)`
+##### `await connection.app(path, options)`
 
 Requests a protected resource using a shared application ticket where:
 - `path` - the resource path (e.g. '/resource').
 - `options` - optional configuration object where:
     - `method` - the HTTP method (e.g. 'GET'). Defaults to `'GET'`.
     - `payload` - the request payload object or string. Defaults to no payload.
-- `callback` - the callback method using the signature `function(err, result, code, ticket)` where:
-    - `err` - an error condition.
+
+Return value: `{ result, code, ticket }` where:
     - `result` - the requested resource (parsed to object if JSON).
     - `code` - the HTTP response code.
     - `ticket` - the ticket used to make the request (may be different from the ticket provided
       when the ticket was expired and refreshed).
+    - throws request errors.
 
 Once an application ticket is obtained internally using the provided **hawk** credentials in the
 constructor, it will be reused by called to `connection.app()`. If it expires, it will
 automatically refresh and stored for future usage.
 
-##### `connection.reissue(ticket, callback)`
+##### `await connection.reissue(ticket)`
 
 Reissues (refresh) a ticket where:
 - `ticket` - the ticket being reissued.
-- `callback` - the callback method using the signature `function(err, reissued)` where:
-    - `err` - an error condition.
-    - `reissued` - the reissued ticket.
+
+Return value: the reissued ticket.
 
 ### `Oz.endpoints`
 
@@ -315,28 +316,23 @@ password rotation.
 
 ##### `loadAppFunc`
 
-The application lookup method using the signature `function(id, next)` where:
+The application lookup method using the signature `async function(id)` where:
 - `id` - the application identifier being requested.
-- `next` - the callback method used to return the requested application using the signature
-    `function(err, app)` where:
-    - `err` - an error condition.
-    - `app` - an [application](#app-object) object.
+- the function must return an [application](#app-object) object or throw an error;
 
 ##### `loadGrantFunc`
 
-The grant lookup method using the signature `function(id, next)` where:
+The grant lookup method using the signature `async function(id)` where:
 - `id` - the grant identifier being requested.
-- `next` - the callback method used to return the requested grant using the signature
-    `function(err, grant, ext)` where:
-    - `err` - an error condition.
+- the function must return an object `{ grant, ext }` or throw an error where:
     - `grant` - a [grant](#grant-object) object.
-    - `ext` - an object used to include custom server data in the ticket and response where:
+    - `ext` - an optional object used to include custom server data in the ticket and response where:
         - `public` - an object which is included in the response under `ticket.ext` and in
             the encoded ticket as `ticket.ext.public`.
         - `private` - an object which is included only in the encoded ticket as
             `ticket.ext.private`.
 
-#### `endpoints.app(req, payload, options, callback)`
+#### `await endpoints.app(req, payload, options)`
 
 Authenticates an application request and if valid, issues an application ticket where:
 - `req` - the node HTTP server request object.
@@ -348,11 +344,10 @@ Authenticates an application request and if valid, issues an application ticket 
     - `ticket` - optional [ticket options](#ticket-options) used for parsing and issuance.
     - `hawk` - optional [Hawk](https://github.com/hueniverse/hawk) configuration object. Defaults to
       the Hawk defaults.
-- `callback` - the method used to return the request result with signature `function(err, ticket)` where:
-    - `err` - an error condition.
-    - `ticket` - a [ticket response](#ticket-response) object.
+
+Return value: a [ticket response](#ticket-response) object or throws an error.
         
-#### `endpoints.reissue(req, payload, options, callback)`
+#### `await endpoints.reissue(req, payload, options)`
 
 Reissue an existing ticket (the ticket used to authenticate the request) where:
 - `req` - the node HTTP server request object.
@@ -368,11 +363,10 @@ Reissue an existing ticket (the ticket used to authenticate the request) where:
     - `ticket` - optional [ticket options](#ticket-options) used for parsing and issuance.
     - `hawk` - optional [Hawk](https://github.com/hueniverse/hawk) configuration object. Defaults to
       the Hawk defaults.
-- `callback` - the method used to return the request result with signature `function(err, ticket)` where:
-    - `err` - an error condition.
-    - `ticket` - a [ticket response](#ticket-response) object.
 
-#### `endpoints.rsvp(req, payload, options, callback)`
+Return value: a [ticket response](#ticket-response) object or throws an error.
+
+#### `await endpoints.rsvp(req, payload, options)`
 
 Authenticates an application request and if valid, exchanges the provided rsvp with a ticket where:
 - `req` - the node HTTP server request object.
@@ -386,9 +380,8 @@ Authenticates an application request and if valid, exchanges the provided rsvp w
     - `ticket` - optional [ticket options](#ticket-options) used for parsing and issuance.
     - `hawk` - optional [Hawk](https://github.com/hueniverse/hawk) configuration object. Defaults to
       the Hawk defaults.
-- `callback` - the method used to return the request result with signature `function(err, ticket)` where:
-    - `err` - an error condition.
-    - `ticket` - a [ticket response](#ticket-response) object.
+
+Return value: a [ticket response](#ticket-response) object or throws an error.
 
 ### `Oz.hawk`
 
@@ -417,7 +410,7 @@ Returns `true` if the `subset` is fully contained with `scope`, otherwise `false
 
 Server implementation utilities.
 
-#### `Oz.server.authenticate(req, encryptionPassword, options, callback)`
+#### `await Oz.server.authenticate(req, encryptionPassword, options)`
 
 Authenticates an incoming request using [Hawk](https://github.com/hueniverse/hawk) and performs
 additional Oz-specific validations where:
@@ -428,10 +421,9 @@ Authenticates an application request and if valid, issues an application ticket 
     - `ticket` - optional [ticket options](#ticket-options) used for parsing and issuance.
     - `hawk` - optional [Hawk](https://github.com/hueniverse/hawk) configuration object. Defaults to
       the Hawk defaults.
-- `callback` - the method used to return the request result with signature
-  `function(err, credentials, artifacts)` where:
-    - `err` - an error condition.
-    - `credentials` - the decoded [ticket response](#ticket-response) object.
+
+Return value: `{ ticket, artifacts }` or throws an error where:
+    - `ticket` - the decoded [ticket response](#ticket-response) object.
     - `artifacts` - Hawk protocol artifacts.
 
 ### `Oz.ticket`
@@ -454,13 +446,13 @@ one common object to all (it will ignore unused options):
     `sha256`.
 - `ext` - an object used to provide custom server data to be included in the ticket (this option
     will be ignored when passed to an endpoint method and the `loadGrantFunc` function returns an
-    `ext` value in the callback) where:
+    `ext` value) where:
     - `public` - an object which is included in the response under `ticket.ext` and in
         the encoded ticket as `ticket.ext.public`.
     - `private` - an object which is included only in the encoded ticket as
         `ticket.ext.private`.
 
-#### `ticket.issue(app, grant, encryptionPassword, options, callback)`
+#### `await ticket.issue(app, grant, encryptionPassword, options)`
 
 Issues a new application or user ticket where:
 - `app` - the application [object](#app-object) the ticket is being issued to.
@@ -468,11 +460,10 @@ Issues a new application or user ticket where:
   represents user access. `null` if the ticket is an application-only ticket.
 - `encryptionPassword` - the ticket [encryption password](#encryptionPassword).
 - `options` - ticket generation [options](#ticket-options).
-- `callback` - the callback method using signature `function(err, ticket)` where:
-    - `err` - an error condition.
-    - `ticket` - a [ticket response](#ticket-response) object.
 
-#### `ticket.reissue(parentTicket, grant, encryptionPassword, options, callback)`
+Return value: a [ticket response](#ticket-response) object.
+
+#### `await ticket.reissue(parentTicket, grant, encryptionPassword, options)`
 
 Reissues a application or user ticket where:
 - `parentTicket` - the [ticket](#ticket-response) object being reissued.
@@ -480,11 +471,10 @@ Reissues a application or user ticket where:
   represents user access. `null` if the ticket is an application-only ticket.
 - `encryptionPassword` - the ticket [encryption password](#encryptionPassword).
 - `options` - ticket generation [options](#ticket-options).
-- `callback` - the callback method using signature `function(err, ticket)` where:
-    - `err` - an error condition.
-    - `ticket` - a [ticket response](#ticket-response) object.
 
-#### `ticket.rsvp(app, grant, encryptionPassword, options, callback)`
+Return value: a [ticket response](#ticket-response) object or throws an error.
+
+#### `await ticket.rsvp(app, grant, encryptionPassword, options)`
 
 Generates an rsvp string representing a user grant where:
 - `app` - the application [object](#app-object) the ticket is being issued to.
@@ -492,11 +482,10 @@ Generates an rsvp string representing a user grant where:
   represents user access. `null` if the ticket is an application-only ticket.
 - `encryptionPassword` - the ticket [encryption password](#encryptionPassword).
 - `options` - ticket generation [options](#ticket-options).
-- `callback` - the callback method using signature `function(err, rsvp)` where:
-    - `err` - an error condition.
-    - `rsvp` - the rsvp string.
 
-#### `ticket.generate(ticket, encryptionPassword, options, callback)`
+Return value: the rsvp string or throws an error.
+
+#### `await ticket.generate(ticket, encryptionPassword, options)`
 
 Adds the cryptographic properties to a ticket and prepares the response where:
 - `ticket` - an incomplete [ticket](#ticket-response) object with the following:
@@ -508,19 +497,17 @@ Adds the cryptographic properties to a ticket and prepares the response where:
     - `dlg`
 - `encryptionPassword` - the ticket [encryption password](#encryptionPassword).
 - `options` - ticket generation [options](#ticket-options).
-- `callback` - the callback method using signature `function(err, ticket)` where:
-    - `err` - an error condition.
-    - `ticket` - the completed [ticket response](#ticket-response) object.
 
-#### `ticket.parse(id, encryptionPassword, options, callback)`
+Return value: the completed [ticket response](#ticket-response) object or throws an error.
+
+#### `await ticket.parse(id, encryptionPassword, options)`
 
 Decodes a ticket identifier into a ticket response where:
 - `id` - the ticket id which contains the encoded ticket information.
 - `encryptionPassword` - the ticket [encryption password](#encryptionPassword).
 - `options` - ticket generation [options](#ticket-options).
-- `callback` - the callback method using signature `function(err, ticket)` where:
-    - `err` - an error condition.
-    - `ticket` - a [ticket response](#ticket-response) object.
+
+Return value: a [ticket response](#ticket-response) object or throws an error.
 
 ## Security Considerations
 
