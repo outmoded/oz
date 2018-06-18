@@ -11,12 +11,6 @@ attribute to the error payload).
 
 [![Build Status](https://api.travis-ci.org/hueniverse/oz.svg?branch=master)](http://travis-ci.org/hueniverse/oz)
 
-# Sponsor
-
-<img align="left" src="https://user-images.githubusercontent.com/83319/31722733-de95bbde-b3ea-11e7-96bf-4f4e8f915588.png" /> If you want to add secure authentication to apps or APIs, feel free to check out Auth0's SDKs and free plan at  [auth0.com/overview](https://auth0.com/overview?utm_source=GHsponsor&utm_medium=GHsponsor&utm_campaign=oz&utm_content=auth).
-
-<br>
-
 # Table of Content
 
 - [Protocol](#protocol)
