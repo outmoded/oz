@@ -10,21 +10,18 @@
     "oz",
     "hawk"
   ],
-  "engines": {
-    "node": ">=8.9.0"
-  },
   "dependencies": {
     "boom": "7.x.x",
     "cryptiles": "4.x.x",
     "hawk": "7.x.x",
-    "hoek": "5.x.x",
+    "hoek": "6.x.x",
     "iron": "5.x.x",
-    "joi": "13.x.x",
+    "joi": "14.x.x",
     "wreck": "14.x.x"
   },
   "devDependencies": {
     "code": "5.x.x",
-    "lab": "15.x.x"
+    "lab": "17.x.x"
   },
   "scripts": {
     "test": "lab -a code -t 100 -L",
