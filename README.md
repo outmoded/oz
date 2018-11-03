@@ -9,7 +9,9 @@ an application.
 Protocol version: **5.0.0** (Same as v1.0.0 but moved the expired ticket indicator from a header
 attribute to the error payload).
 
-[![Build Status](https://secure.travis-ci.org/hueniverse/oz.png)](http://travis-ci.org/hueniverse/oz)
+[![Build Status](https://api.travis-ci.org/hueniverse/oz.svg?branch=master)](http://travis-ci.org/hueniverse/oz)
+
+# Table of Content
 
 - [Protocol](#protocol)
   - [Workflow](#workflow)
